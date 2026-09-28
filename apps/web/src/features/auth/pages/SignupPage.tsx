@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { roleCardStyle } from '@/lib/uiHelpers';
+import { signup, readApiError } from '@/lib/api';
 
 export default function SignupPage() {
 
@@ -25,10 +26,27 @@ export default function SignupPage() {
   const onCadPropriedadeChange = (e: React.ChangeEvent<HTMLInputElement>) => setCad((c) => ({ ...c, propriedade: e.target.value }));
   const goLogin = () => navigate('/login');
   const { login } = useAuth();
-  const goDashboard = () => {
-    // TODO: substituir por chamada real de cadastro (POST /auth/signup) enviando `cad` e `role`
-    login({ nome: cad.nome || 'Novo usuário', role });
-    navigate('/dashboard');
+  const [erro, setErro] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const goDashboard = async () => {
+    setErro('');
+    setEnviando(true);
+    try {
+      const user = await signup({
+        nome: cad.nome,
+        email: cad.email,
+        senha: cad.senha,
+        role,
+        propriedade: cad.propriedade,
+      });
+      login(user);
+      navigate('/dashboard');
+    } catch (err) {
+      const apiErr = readApiError(err);
+      setErro(apiErr.message || 'Não foi possível criar a conta');
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -155,8 +173,13 @@ export default function SignupPage() {
             <div style={{height: '48px', borderRadius: '12px', background: '#FFFFFF', border: '1px solid #D6D4CB', display: 'flex', alignItems: 'center', padding: '0 14px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '310ms'}}>
               <input type="text" placeholder="Ex.: Fazenda Boa Vista" value={cad.propriedade} onChange={onCadPropriedadeChange} style={{width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: '#1F211D'}} />
             </div>
-            <div style={{height: '52px', marginTop: '20px', borderRadius: '12px', background: '#6B8F71', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '15px', fontWeight: '600', cursor: 'pointer', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '350ms'}} onClick={goDashboard}>
-              Criar conta
+            {erro ? (
+              <div style={{fontSize: '12px', color: '#B42318', marginTop: '12px'}}>
+                {erro}
+              </div>
+            ) : null}
+            <div style={{height: '52px', marginTop: '20px', borderRadius: '12px', background: '#6B8F71', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '15px', fontWeight: '600', cursor: enviando ? 'default' : 'pointer', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '350ms'}} onClick={enviando ? undefined : goDashboard}>
+              {enviando ? 'Criando conta...' : 'Criar conta'}
             </div>
             <div style={{textAlign: 'center', fontSize: '12px', color: '#6B6D63', marginTop: '14px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '380ms'}}>
               Já tem uma conta? 

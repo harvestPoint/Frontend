@@ -2,11 +2,22 @@
 // e adaptado para React + TypeScript + Tailwind pelo pipeline de migração.
 // Revise os TODOs antes de ligar em dados reais da API.
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function PerfilPage() {
 
   const navigate = useNavigate();
-  const goLogin = () => navigate('/login');
+  const { user, isTecnico, logout } = useAuth();
+  const goLogin = async () => {
+    await logout();
+    navigate('/login');
+  };
+  const iniciais = (user?.nome || 'U')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('');
 
   return (
     <>
@@ -21,16 +32,16 @@ export default function PerfilPage() {
     <div style={{display: 'grid', gridTemplateColumns: '280px 1fr', gap: '20px', alignItems: 'start'}}>
       <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
         <div style={{width: '72px', height: '72px', borderRadius: '50%', background: 'var(--hp-accent)', color: '#FFFFFF', fontSize: '22px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-          AF
+          {iniciais || 'U'}
         </div>
         <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', fontWeight: '700', marginTop: '14px'}}>
-          Abraão Freitas
+          {user?.nome ?? 'Usuário'}
         </div>
         <div style={{fontSize: '13px', color: 'var(--hp-text-2)', marginTop: '2px'}}>
-          Proprietário
+          {isTecnico ? 'Técnico de campo' : 'Proprietário'}
         </div>
         <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--hp-border)', width: '100%'}}>
-          Fazenda Boa Vista · Petrolina/PE
+          {user?.propriedade || 'Propriedade não informada'}
         </div>
       </div>
       <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px'}}>
@@ -44,7 +55,7 @@ export default function PerfilPage() {
                 Nome completo
               </div>
               <div style={{height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: '14px'}}>
-                Abraão Freitas
+                {user?.nome ?? ''}
               </div>
             </div>
             <div>
@@ -60,7 +71,7 @@ export default function PerfilPage() {
                 E-mail profissional
               </div>
               <div style={{height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: '14px'}}>
-                abraao@boavista.agro.br
+                {user?.email ?? ''}
               </div>
             </div>
           </div>
@@ -75,7 +86,7 @@ export default function PerfilPage() {
               Perfil de acesso
             </div>
             <div style={{height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: '14px', maxWidth: '320px'}}>
-              Proprietário
+              {isTecnico ? 'Técnico de campo' : 'Proprietário'}
               <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)'}}>
                 expand_more
               </span>

@@ -27,7 +27,8 @@ import SensoresPage from '@/features/cadastros/sensores/pages/SensoresPage';
 /** Raiz pública: mostra a landing pra quem não está logado e manda quem já
  * está logado direto pro Dashboard — os dois "moram" na mesma rota "/". */
 function RootGate() {
-  const { user } = useAuth();
+  const { user, ready } = useAuth();
+  if (!ready) return null;
   return user ? <Navigate to="/dashboard" replace /> : <LandingPage />;
 }
 

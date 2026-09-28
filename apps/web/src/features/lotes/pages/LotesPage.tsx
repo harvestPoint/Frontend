@@ -1,16 +1,168 @@
 // Gerado a partir do design aprovado no Claude Design (HarvestPoint.dc.html)
 // e adaptado para React + TypeScript + Tailwind pelo pipeline de migração.
-// Revise os TODOs antes de ligar em dados reais da API.
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import LotesVazioState from '@/features/lotes/components/LotesVazioState';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  createLote,
+  deleteLote,
+  listLotes,
+  readApiError,
+  updateLote,
+  type Lote,
+} from '@/lib/api';
+
+type FormState = {
+  codigo: string;
+  propriedade: string;
+  cultura: string;
+  variedade: string;
+  area_ha: string;
+  data_plantio: string;
+  sensor_vinculado: string;
+  status: string;
+};
+
+const emptyForm = (propriedade: string): FormState => ({
+  codigo: '',
+  propriedade,
+  cultura: 'Manga',
+  variedade: 'Tommy Atkins',
+  area_ha: '',
+  data_plantio: '',
+  sensor_vinculado: '',
+  status: 'ativo',
+});
+
+function statusLabel(status: string) {
+  if (status === 'em_manejo') return 'em manejo';
+  return status;
+}
+
+function formatDate(value: string | null) {
+  if (!value) return '—';
+  const [y, m, d] = value.split('-');
+  if (!y || !m || !d) return value;
+  return `${d}/${m}/${y}`;
+}
 
 export default function LotesPage() {
-
   const navigate = useNavigate();
-  const goLote = () => navigate('/lotes/A1');
+  const { user } = useAuth();
+  const [lotes, setLotes] = useState<Lote[]>([]);
+  const [busca, setBusca] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const openDrawer = () => setDrawerOpen(true);
-  const closeDrawer = () => setDrawerOpen(false);
+  const [editing, setEditing] = useState<Lote | null>(null);
+  const [form, setForm] = useState<FormState>(emptyForm(user?.propriedade || ''));
+  const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(true);
+
+  const load = useCallback(async () => {
+    setCarregando(true);
+    try {
+      setLotes(await listLotes());
+    } catch (err) {
+      setErro(readApiError(err).message || 'Não foi possível carregar os lotes');
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const openCreate = () => {
+    setEditing(null);
+    setErro('');
+    setForm(emptyForm(user?.propriedade || ''));
+    setDrawerOpen(true);
+  };
+
+  const openEdit = (lote: Lote) => {
+    setEditing(lote);
+    setErro('');
+    setForm({
+      codigo: lote.codigo,
+      propriedade: lote.propriedade,
+      cultura: lote.cultura,
+      variedade: lote.variedade,
+      area_ha: String(lote.area_ha ?? ''),
+      data_plantio: lote.data_plantio || '',
+      sensor_vinculado: lote.sensor_vinculado || '',
+      status: lote.status,
+    });
+    setDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setEditing(null);
+  };
+
+  const onField = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+  };
+
+  const salvar = async () => {
+    setErro('');
+    const payload = {
+      codigo: form.codigo,
+      propriedade: form.propriedade,
+      cultura: form.cultura,
+      variedade: form.variedade,
+      area_ha: Number(String(form.area_ha).replace(',', '.')),
+      data_plantio: form.data_plantio || null,
+      sensor_vinculado: form.sensor_vinculado || null,
+      status: form.status,
+    };
+    try {
+      if (editing) await updateLote(editing.id, payload);
+      else await createLote({ ...payload, codigo: form.codigo });
+      closeDrawer();
+      await load();
+    } catch (err) {
+      const apiErr = readApiError(err);
+      setErro(apiErr.details?.join(' ') || apiErr.message || 'Não foi possível salvar o lote');
+    }
+  };
+
+  const excluir = async (lote: Lote) => {
+    if (!window.confirm(`Excluir ${lote.codigo}?`)) return;
+    try {
+      await deleteLote(lote.id);
+      await load();
+    } catch (err) {
+      setErro(readApiError(err).message || 'Não foi possível excluir o lote');
+    }
+  };
+
+  const filtrados = useMemo(() => {
+    const q = busca.trim().toLowerCase();
+    if (!q) return lotes;
+    return lotes.filter((l) =>
+      [l.codigo, l.cultura, l.variedade, l.propriedade].some((v) => v.toLowerCase().includes(q)),
+    );
+  }, [lotes, busca]);
+
+  const inputBox: React.CSSProperties = {
+    height: '44px',
+    border: '1px solid var(--hp-input-border)',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 12px',
+    fontSize: '14px',
+    width: '100%',
+    background: 'transparent',
+    color: 'var(--hp-text)',
+    outline: 'none',
+  };
+
+  if (!carregando && lotes.length === 0 && !drawerOpen) {
+    return <LotesVazioState onNovoLote={openCreate} />;
+  }
 
   return (
     <>
@@ -22,24 +174,30 @@ export default function LotesPage() {
               Lotes / Talhões
             </h1>
             <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px'}}>
-              Divisão produtiva por propriedade · 3 registros
+              Divisão produtiva por propriedade · {lotes.length} registro{lotes.length === 1 ? '' : 's'}
             </div>
           </div>
-          <div style={{height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'}} onClick={openDrawer}>
+          <div style={{height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'}} onClick={openCreate}>
             <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1'}}>
               add
             </span>
             Novo lote
           </div>
         </div>
+        {erro && !drawerOpen ? (
+          <div style={{fontSize: '13px', color: 'var(--hp-critico)'}}>{erro}</div>
+        ) : null}
         <div style={{height: '64px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px'}}>
           <div style={{flex: '1', minWidth: '0', height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px'}}>
             <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-3)'}}>
               search
             </span>
-            <span style={{fontSize: '14px', color: 'var(--hp-text-3)'}}>
-              Buscar por código, cultura ou variedade
-            </span>
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar por código, cultura ou variedade"
+              style={{flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: 'var(--hp-text)'}}
+            />
           </div>
           <div style={{height: '44px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', fontSize: '13px', fontWeight: '600'}}>
             Propriedade
@@ -93,114 +251,48 @@ export default function LotesPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
-                  <td style={{padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer', whiteSpace: 'nowrap'}} onClick={goLote}>
-                    Lote A1
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                    Fazenda Boa Vista
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
-                    Manga
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                    Tommy Atkins
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', textAlign: 'right', whiteSpace: 'nowrap'}}>
-                    120 ha
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
-                    15/03/2024
-                  </td>
-                  <td style={{padding: '0 16px'}}>
-                    <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent)', fontSize: '12px', fontWeight: '600'}}>
-                      <span style={{width: '6px', height: '6px', borderRadius: '50%', background: 'var(--hp-accent)'}} />
-                      ativo
-                    </span>
-                  </td>
-                  <td style={{padding: '0 16px', textAlign: 'right'}}>
-                    <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer', marginRight: '12px'}}>
-                      edit
-                    </span>
-                    <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer'}}>
-                      more_vert
-                    </span>
-                  </td>
-                </tr>
-                <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
-                  <td style={{padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer', whiteSpace: 'nowrap'}}>
-                    Lote B2
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                    Fazenda Boa Vista
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
-                    Uva
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                    Itália
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', textAlign: 'right', whiteSpace: 'nowrap'}}>
-                    85 ha
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
-                    10/06/2024
-                  </td>
-                  <td style={{padding: '0 16px'}}>
-                    <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent)', fontSize: '12px', fontWeight: '600'}}>
-                      <span style={{width: '6px', height: '6px', borderRadius: '50%', background: 'var(--hp-accent)'}} />
-                      ativo
-                    </span>
-                  </td>
-                  <td style={{padding: '0 16px', textAlign: 'right'}}>
-                    <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer', marginRight: '12px'}}>
-                      edit
-                    </span>
-                    <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer'}}>
-                      more_vert
-                    </span>
-                  </td>
-                </tr>
-                <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
-                  <td style={{padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer', whiteSpace: 'nowrap'}}>
-                    Lote C3
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                    Fazenda Boa Vista
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
-                    Uva
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                    Crimson Seedless
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', textAlign: 'right', whiteSpace: 'nowrap'}}>
-                    45 ha
-                  </td>
-                  <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
-                    22/08/2024
-                  </td>
-                  <td style={{padding: '0 16px'}}>
-                    <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-atencao-bg)', color: 'var(--hp-atencao)', fontSize: '12px', fontWeight: '600'}}>
-                      <span style={{width: '6px', height: '6px', borderRadius: '50%', background: 'var(--hp-atencao)'}} />
-                      em manejo
-                    </span>
-                  </td>
-                  <td style={{padding: '0 16px', textAlign: 'right'}}>
-                    <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer', marginRight: '12px'}}>
-                      edit
-                    </span>
-                    <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer'}}>
-                      more_vert
-                    </span>
-                  </td>
-                </tr>
+                {filtrados.map((lote) => (
+                  <tr key={lote.id} style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
+                    <td style={{padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer', whiteSpace: 'nowrap'}} onClick={() => navigate(`/lotes/${lote.id}`)}>
+                      {lote.codigo}
+                    </td>
+                    <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                      {lote.propriedade}
+                    </td>
+                    <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
+                      {lote.cultura}
+                    </td>
+                    <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                      {lote.variedade}
+                    </td>
+                    <td style={{padding: '0 16px', fontSize: '14px', textAlign: 'right', whiteSpace: 'nowrap'}}>
+                      {lote.area_ha} ha
+                    </td>
+                    <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
+                      {formatDate(lote.data_plantio)}
+                    </td>
+                    <td style={{padding: '0 16px'}}>
+                      <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: lote.status === 'em_manejo' ? 'var(--hp-atencao-bg)' : 'var(--hp-accent-soft)', color: lote.status === 'em_manejo' ? 'var(--hp-atencao)' : 'var(--hp-accent)', fontSize: '12px', fontWeight: '600'}}>
+                        <span style={{width: '6px', height: '6px', borderRadius: '50%', background: lote.status === 'em_manejo' ? 'var(--hp-atencao)' : 'var(--hp-accent)'}} />
+                        {statusLabel(lote.status)}
+                      </span>
+                    </td>
+                    <td style={{padding: '0 16px', textAlign: 'right'}}>
+                      <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer', marginRight: '12px'}} onClick={() => openEdit(lote)}>
+                        edit
+                      </span>
+                      <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer'}} onClick={() => void excluir(lote)}>
+                        delete
+                      </span>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
           <div style={{height: '56px', borderTop: '1px solid var(--hp-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', fontSize: '12px', color: 'var(--hp-text-2)'}}>
             <span>
-              Mostrando 1–3 de 3
+              Mostrando {filtrados.length} de {lotes.length}
             </span>
             <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
               <div style={{height: '32px', padding: '0 10px', display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid var(--hp-input-border)', borderRadius: '8px', fontSize: '12px', fontWeight: '600', color: 'var(--hp-text)'}}>
@@ -224,13 +316,14 @@ export default function LotesPage() {
         <div style={{width: '480px', flex: '0 0 480px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', boxShadow: '-12px 0 48px rgba(22,21,15,.14)', display: 'flex', flexDirection: 'column', minHeight: '720px'}}>
           <div style={{padding: '20px', borderBottom: '1px solid var(--hp-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
             <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '20px', lineHeight: '28px', fontWeight: '700'}}>
-              Novo lote
+              {editing ? 'Editar lote' : 'Novo lote'}
             </div>
             <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '20px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer'}} onClick={closeDrawer}>
               close
             </span>
           </div>
           <div style={{flex: '1', padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px'}}>
+            {erro ? <div style={{fontSize: '13px', color: 'var(--hp-critico)'}}>{erro}</div> : null}
             <div>
               <div style={{fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-3)', marginBottom: '12px'}}>
                 IDENTIFICAÇÃO
@@ -240,43 +333,26 @@ export default function LotesPage() {
                   <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '6px'}}>
                     Código do lote
                   </div>
-                  <div style={{height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: '14px', color: 'var(--hp-text-3)'}}>
-                    Ex.: Lote D4
-                  </div>
+                  <input style={inputBox} placeholder="Ex.: Lote D4" value={form.codigo} onChange={onField('codigo')} />
                 </div>
                 <div>
                   <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '6px'}}>
                     Propriedade
                   </div>
-                  <div style={{height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: '14px'}}>
-                    Fazenda Boa Vista
-                    <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)'}}>
-                      expand_more
-                    </span>
-                  </div>
+                  <input style={inputBox} value={form.propriedade} onChange={onField('propriedade')} />
                 </div>
                 <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px'}}>
                   <div>
                     <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '6px'}}>
                       Cultura
                     </div>
-                    <div style={{height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: '14px'}}>
-                      Manga
-                      <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)'}}>
-                        expand_more
-                      </span>
-                    </div>
+                    <input style={inputBox} value={form.cultura} onChange={onField('cultura')} />
                   </div>
                   <div>
                     <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '6px'}}>
                       Variedade
                     </div>
-                    <div style={{height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: '14px'}}>
-                      Tommy Atkins
-                      <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)'}}>
-                        expand_more
-                      </span>
-                    </div>
+                    <input style={inputBox} value={form.variedade} onChange={onField('variedade')} />
                   </div>
                 </div>
               </div>
@@ -292,43 +368,30 @@ export default function LotesPage() {
                     <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '6px'}}>
                       Área (ha)
                     </div>
-                    <div style={{height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: '14px', color: 'var(--hp-text-3)'}}>
-                      0,0
-                    </div>
+                    <input style={inputBox} placeholder="0,0" value={form.area_ha} onChange={onField('area_ha')} />
                   </div>
                   <div>
                     <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '6px'}}>
                       Data de plantio
                     </div>
-                    <div style={{height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: '14px', color: 'var(--hp-text-3)'}}>
-                      dd/mm/aaaa
-                      <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)'}}>
-                        calendar_today
-                      </span>
-                    </div>
+                    <input type="date" style={inputBox} value={form.data_plantio} onChange={onField('data_plantio')} />
                   </div>
                 </div>
                 <div>
                   <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '6px'}}>
                     Sensor vinculado
                   </div>
-                  <div style={{height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: '14px'}}>
-                    IOT-001
-                    <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)'}}>
-                      expand_more
-                    </span>
-                  </div>
+                  <input style={inputBox} placeholder="IOT-001" value={form.sensor_vinculado} onChange={onField('sensor_vinculado')} />
                 </div>
                 <div>
                   <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '6px'}}>
                     Status
                   </div>
-                  <div style={{height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: '14px'}}>
-                    ativo
-                    <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)'}}>
-                      expand_more
-                    </span>
-                  </div>
+                  <select style={inputBox} value={form.status} onChange={onField('status')}>
+                    <option value="ativo">ativo</option>
+                    <option value="em_manejo">em manejo</option>
+                    <option value="inativo">inativo</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -337,7 +400,7 @@ export default function LotesPage() {
             <div style={{height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', border: '1px solid var(--hp-input-border)', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'}} onClick={closeDrawer}>
               Cancelar
             </div>
-            <div style={{height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'}} onClick={closeDrawer}>
+            <div style={{height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'}} onClick={() => void salvar()}>
               Salvar lote
             </div>
           </div>

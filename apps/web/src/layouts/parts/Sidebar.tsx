@@ -74,7 +74,7 @@ export default function Sidebar() {
           </div>
           <div>
             <div style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '15px', fontWeight: 800, letterSpacing: '-.01em' }}>HarvestPoint</div>
-            <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>Fazenda Boa Vista</div>
+            <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>{user?.propriedade || 'HarvestPoint'}</div>
           </div>
         </div>
       </div>

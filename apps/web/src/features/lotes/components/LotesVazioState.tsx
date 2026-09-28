@@ -2,7 +2,7 @@
 // e adaptado para React + TypeScript + Tailwind pelo pipeline de migração.
 // Revise os TODOs antes de ligar em dados reais da API.
 
-export default function LotesVazioState() {
+export default function LotesVazioState({ onNovoLote }: { onNovoLote?: () => void }) {
 
   return (
     <>
@@ -15,7 +15,7 @@ export default function LotesVazioState() {
           Divisão produtiva por propriedade · 0 registros
         </div>
       </div>
-      <div style={{height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'}}>
+      <div style={{height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'}} onClick={onNovoLote}>
         <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1'}}>
           add
         </span>
@@ -32,7 +32,7 @@ export default function LotesVazioState() {
       <div style={{fontSize: '14px', lineHeight: '20px', color: 'var(--hp-text-2)', maxWidth: '420px'}}>
         Cadastre o primeiro lote para vincular sensores, acompanhar o clima e receber alertas de estresse térmico.
       </div>
-      <div style={{height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', marginTop: '6px'}}>
+      <div style={{height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', marginTop: '6px'}} onClick={onNovoLote}>
         <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1'}}>
           add
         </span>

@@ -1,12 +1,37 @@
 // Gerado a partir do design aprovado no Claude Design (HarvestPoint.dc.html)
 // e adaptado para React + TypeScript + Tailwind pelo pipeline de migração.
 // Revise os TODOs antes de ligar em dados reais da API.
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getLote, type Lote } from '@/lib/api';
+
+function formatDate(value: string | null) {
+  if (!value) return '—';
+  const [y, m, d] = value.split('-');
+  if (!y || !m || !d) return value;
+  return `${d}/${m}/${y}`;
+}
 
 export default function LoteDetalhePage() {
 
   const navigate = useNavigate();
+  const { id } = useParams();
   const goLotes = () => navigate('/lotes');
+  const [lote, setLote] = useState<Lote | null>(null);
+  const [erro, setErro] = useState('');
+
+  useEffect(() => {
+    if (!id) return;
+    getLote(id)
+      .then(setLote)
+      .catch(() => setErro('Lote não encontrado'));
+  }, [id]);
+
+  const titulo = lote ? `${lote.codigo} · ${lote.cultura} ${lote.variedade}` : 'Lote';
+  const status = lote?.status === 'em_manejo' ? 'em manejo' : (lote?.status || '…');
+  const subtitulo = lote
+    ? `${lote.propriedade} · ${lote.area_ha} ha · plantio ${formatDate(lote.data_plantio)} · sensor ${lote.sensor_vinculado || '—'}`
+    : (erro || 'Carregando…');
 
   return (
     <>
@@ -17,19 +42,19 @@ export default function LoteDetalhePage() {
       <div>
         <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
           <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '28px', lineHeight: '34px', fontWeight: '700', letterSpacing: '-.01em'}}>
-            Lote A1 · Manga Tommy Atkins
+            {titulo}
           </h1>
           <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent)', fontSize: '12px', fontWeight: '600'}}>
             <span style={{width: '6px', height: '6px', borderRadius: '50%', background: 'var(--hp-accent)'}} />
-            ativo
+            {status}
           </span>
         </div>
         <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '6px'}}>
-          Fazenda Boa Vista · 120 ha · plantio 15/03/2024 · sensor IOT-001
+          {subtitulo}
         </div>
       </div>
       <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-        <div style={{height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-surface)', border: '1px solid var(--hp-input-border)', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'}}>
+        <div style={{height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-surface)', border: '1px solid var(--hp-input-border)', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'}} onClick={goLotes}>
           <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1'}}>
             edit
           </span>

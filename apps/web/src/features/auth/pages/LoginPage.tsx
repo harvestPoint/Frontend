@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { roleCardStyle } from '@/lib/uiHelpers';
+import { login as loginRequest, readApiError } from '@/lib/api';
 
 export default function LoginPage() {
 
@@ -24,14 +25,25 @@ export default function LoginPage() {
   const onEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value);
   const [senha, setSenha] = useState('');
   const onSenhaChange = (e: React.ChangeEvent<HTMLInputElement>) => setSenha(e.target.value);
+  const [erro, setErro] = useState('');
+  const [enviando, setEnviando] = useState(false);
   const [showSenha, setShowSenha] = useState(false);
   const toggleShowSenha = () => setShowSenha((v) => !v);
   const passwordFieldType = showSenha ? 'text' : 'password';
   const passwordIcon = showSenha ? 'visibility_off' : 'visibility';
-  const handleEntrar = () => {
-    // TODO: substituir por chamada real de autenticação (POST /auth/login) usando email/senha
-    login({ nome: 'Abraão Freitas', role });
-    navigate('/dashboard');
+  const handleEntrar = async () => {
+    setErro('');
+    setEnviando(true);
+    try {
+      const user = await loginRequest({ email, senha });
+      login(user);
+      navigate('/dashboard');
+    } catch (err) {
+      const apiErr = readApiError(err);
+      setErro(apiErr.message || 'Não foi possível entrar');
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -200,8 +212,13 @@ export default function LoginPage() {
                 Esqueci a senha
               </div>
             </div>
-            <div style={{height: '52px', borderRadius: '12px', background: '#6B8F71', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#FFFFFF', fontSize: '15px', fontWeight: '600', cursor: 'pointer', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '350ms'}} onClick={handleEntrar}>
-              Entrar na plataforma
+            {erro ? (
+              <div style={{fontSize: '12px', color: '#B42318', marginBottom: '10px'}}>
+                {erro}
+              </div>
+            ) : null}
+            <div style={{height: '52px', borderRadius: '12px', background: '#6B8F71', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#FFFFFF', fontSize: '15px', fontWeight: '600', cursor: enviando ? 'default' : 'pointer', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '350ms'}} onClick={enviando ? undefined : handleEntrar}>
+              {enviando ? 'Entrando...' : 'Entrar na plataforma'}
               <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1'}}>
                 arrow_forward
               </span>
