@@ -2,6 +2,7 @@
 
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { PropertyProvider } from '@/contexts/PropertyContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import AppRoutes from '@/routes';
 
@@ -10,7 +11,9 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <AppRoutes />
+          <PropertyProvider>
+            <AppRoutes />
+          </PropertyProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

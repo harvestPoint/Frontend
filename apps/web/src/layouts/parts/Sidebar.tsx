@@ -1,10 +1,8 @@
 // apps/web/src/layouts/parts/Sidebar.tsx
-// Fiel ao shell aprovado no Claude Design — a condição que esconde
-// "CADASTROS" do Proprietário já veio pronta de lá (isTecnico); aqui ela é
-// ligada ao papel real do usuário autenticado em vez de um estado fixo.
-import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { iniciais, listSensores, type Sensor } from '@/lib/api';
 
 interface NavItemProps {
   to: string;
@@ -40,9 +38,17 @@ function NavItem({ to, icon, label, badge }: NavItemProps) {
       {typeof badge === 'number' && badge > 0 && (
         <span
           style={{
-            minWidth: '20px', height: '20px', borderRadius: '12px', background: 'var(--hp-critico)',
-            color: '#FFFFFF', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center',
-            justifyContent: 'center', padding: '0 6px',
+            minWidth: '20px',
+            height: '20px',
+            borderRadius: '12px',
+            background: 'var(--hp-critico)',
+            color: '#FFFFFF',
+            fontSize: '12px',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 6px',
           }}
         >
           {badge}
@@ -60,10 +66,28 @@ function GroupLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  alertasPendentes?: number;
+}
+
+export default function Sidebar({ alertasPendentes = 0 }: SidebarProps) {
   const { user, isTecnico } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const [cadastrosOpen, setCadastrosOpen] = useState(true);
+  const [sensoresCount, setSensoresCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    listSensores()
+      .then((data) => {
+        const ativos = Array.isArray(data) ? data.filter((s: Sensor) => s.status === 'ATIVO').length : 0;
+        setSensoresCount(ativos);
+      })
+      .catch(() => setSensoresCount(null));
+  }, [location.pathname]);
+
+  // Se o usuário está navegando na página de alertas, esconde a contagem de notificação fantasma
+  const badgeAlertas = location.pathname === '/alertas' ? undefined : (alertasPendentes > 0 ? alertasPendentes : undefined);
 
   return (
     <div style={{ width: '264px', flex: '0 0 264px', background: 'var(--hp-surface)', borderRight: '1px solid var(--hp-border)', display: 'flex', flexDirection: 'column' }}>
@@ -74,7 +98,7 @@ export default function Sidebar() {
           </div>
           <div>
             <div style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '15px', fontWeight: 800, letterSpacing: '-.01em' }}>HarvestPoint</div>
-            <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>{user?.propriedade || 'HarvestPoint'}</div>
+            <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>{user?.propriedade || 'Vale do São Francisco'}</div>
           </div>
         </div>
       </div>
@@ -83,7 +107,7 @@ export default function Sidebar() {
         <GroupLabel>VISÃO GERAL</GroupLabel>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <NavItem to="/" icon="dashboard" label="Dashboard" />
-          <NavItem to="/alertas" icon="warning" label="Alertas" badge={4} />
+          <NavItem to="/alertas" icon="warning" label="Alertas" badge={badgeAlertas} />
         </div>
 
         <GroupLabel>OPERAÇÃO</GroupLabel>
@@ -129,19 +153,19 @@ export default function Sidebar() {
 
       <div style={{ borderTop: '1px solid var(--hp-border)', padding: '14px 16px' }}>
         <div style={{ fontSize: '12px', color: 'var(--hp-text-2)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--hp-accent)', display: 'inline-block' }} />
-          2 sensores on-line · atualizado há 2 min
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: sensoresCount && sensoresCount > 0 ? 'var(--hp-accent)' : 'var(--hp-atencao)', display: 'inline-block' }} />
+          {sensoresCount != null ? `${sensoresCount} sensor(es) on-line` : 'Rede ESP-32'}
         </div>
         <div
           style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px', cursor: 'pointer' }}
           onClick={() => navigate('/conta')}
         >
           <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--hp-accent)', color: '#FFFFFF', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            AF
+            {iniciais(user?.nome)}
           </div>
           <div>
             <div style={{ fontSize: '13px', lineHeight: '16px', fontWeight: 600 }}>{user?.nome ?? 'Convidado'}</div>
-            <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>{isTecnico ? 'Técnico de campo' : 'Proprietário'}</div>
+            <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>{isTecnico ? 'Técnico de campo' : 'Produtor'}</div>
           </div>
         </div>
       </div>
