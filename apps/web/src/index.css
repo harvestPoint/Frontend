@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --hp-bg: #F7F7F4; --hp-surface: #FFFFFF; --hp-surface-2: #F1F1EC; --hp-elevated: #FFFFFF; --hp-border: #E7E5DE;
+  --hp-text: #1F211D; --hp-text-2: #6B6D63; --hp-text-3: #8B8D82; --hp-text-4: #33352E;
+  --hp-input-border: #D6D4CB; --hp-icon-disabled: #B5B7AC;
+  --hp-accent: #6B8F71; --hp-accent-hover: #55735C; --hp-accent-soft: #E7EFE7; --hp-accent-softer: #F1F5F1; --hp-sucesso-border: #CFE0D2;
+  --hp-critico: #B14C40; --hp-critico-bg: #FBEAE7; --hp-atencao: #B07A34; --hp-atencao-bg: #FBF1E4; --hp-atencao-border: #EFDCC0;
+  --hp-info: #4C7EA8; --hp-info-bg: #EAF1F7;
+  --hp-temp: #C2703C; --hp-umid-solo: #9C7B4F; --hp-precip: #5B8AA6;
+  --hp-accent-band: rgba(107,143,113,.08);
+}
+[data-theme="dark"] {
+  --hp-bg: #0B0C0A; --hp-surface: #131410; --hp-surface-2: #1C1E17; --hp-elevated: #20221A; --hp-border: #2A2C22;
+  --hp-text: #ECEBE4; --hp-text-2: #9B9C8F; --hp-text-3: #7D7F73; --hp-text-4: #D9DAD0;
+  --hp-input-border: #33362B; --hp-icon-disabled: #4A4C3F;
+  --hp-accent: #8FB596; --hp-accent-hover: #A9C9AE; --hp-accent-soft: #1B2A1E; --hp-accent-softer: #151C16; --hp-sucesso-border: #24382A;
+  --hp-critico: #E2897D; --hp-critico-bg: #2A1714; --hp-atencao: #E0B074; --hp-atencao-bg: #2A2013; --hp-atencao-border: #3D2F1C;
+  --hp-info: #7FA8C9; --hp-info-bg: #16222B;
+  --hp-temp: #E2895A; --hp-umid-solo: #C9A876; --hp-precip: #7FB0C9;
+  --hp-accent-band: rgba(143,181,150,.12);
+}
+[data-theme] { transition: background-color .25s ease-out, color .25s ease-out, border-color .25s ease-out; }
+[data-theme] * { transition: background-color .25s ease-out, color .25s ease-out, border-color .25s ease-out, fill .25s ease-out, stroke .25s ease-out; }
+
+* { box-sizing: border-box; }
+html, body { overflow-x: hidden; }
+body {
+  margin: 0;
+  background: var(--hp-bg);
+  color: var(--hp-text);
+  font-family: Inter, Helvetica, Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--hp-accent); text-decoration: none; }
+a:hover { color: var(--hp-accent-hover); }
+input { font-family: inherit; }
+
+/* Correção real do bug de ícones: sem isso, o navegador mostra o nome da
+   ligatura como texto ("warning", "eco"...) em vez do glyph do ícone —
+   Material Symbols exige font-feature-settings: 'liga' explicitamente,
+   a fonte carregar não é suficiente. Aplica em qualquer elemento que use
+   essa fonte, sem precisar tocar em cada tela gerada. */
+[style*="Material Symbols"] {
+  font-feature-settings: 'liga' 1;
+  -webkit-font-feature-settings: 'liga' 1;
+  font-variant-ligatures: common-ligatures;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes hpPulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+@keyframes hpFade { from { background: var(--hp-accent-soft); } to { background: var(--hp-surface); } }
+@keyframes hpDraw { to { stroke-dashoffset: 0; } }
+@keyframes hpFillH { from { height: 0%; } to { height: 100%; } }
+@keyframes hpFillW { from { width: 0%; } to { width: 100%; } }
+@keyframes hpTermScroll { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+@keyframes hpTypeIn { 0% { clip-path: inset(0 100% 0 0); } 70% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 0); } }
+@keyframes hpScrollHint { 0%,100% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(6px); opacity: 1; } }
+@keyframes hpFieldIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
