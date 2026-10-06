@@ -1,31 +1,35 @@
 // apps/web/src/theme/tokens.ts — fonte única de estilo do HarvestPoint
-// Valores extraídos diretamente do export aprovado no Claude Design
-// (HarvestPoint.dc.html) — não são mais uma proposta, são o que já está no ar.
+// Valores do redesign v2, direção "1b Campo" (aprovada) — ver
+// especificacao.md / APLICAR.md do pacote de redesign. temp-min e area
+// são tokens novos desta rodada; radius/pad/gap/row controlam a "forma"
+// (cantos mais abertos, mais respiro, linha de tabela mais alta).
 export const theme = {
   colors: {
     light: {
-      bg: '#F7F7F4', surface: '#FFFFFF', surface2: '#F1F1EC', elevated: '#FFFFFF',
-      border: '#E7E5DE', text: '#1F211D', text2: '#6B6D63', text3: '#8B8D82', text4: '#33352E',
-      inputBorder: '#D6D4CB', iconDisabled: '#B5B7AC',
-      accent: '#6B8F71', accentHover: '#55735C', accentSoft: '#E7EFE7', accentSofter: '#F1F5F1',
+      bg: '#F5F2EA', surface: '#FFFDF8', surface2: '#EFEBE0', elevated: '#FFFDF8',
+      border: '#E3DDCF', text: '#221F18', text2: '#6A6455', text3: '#8A8474', text4: '#33352E',
+      inputBorder: '#D8D1C0', iconDisabled: '#B5B7AC',
+      accent: '#5C7F62', accentHover: '#4A6950', accentSoft: '#E6EEE3', accentSofter: '#F1F5F1',
       sucessoBorder: '#CFE0D2',
-      critico: '#B14C40', criticoBg: '#FBEAE7',
-      atencao: '#B07A34', atencaoBg: '#FBF1E4', atencaoBorder: '#EFDCC0',
-      info: '#4C7EA8', infoBg: '#EAF1F7',
-      temp: '#C2703C', umidSolo: '#9C7B4F', precip: '#5B8AA6',
-      accentBand: 'rgba(107,143,113,.08)',
+      critico: '#AE4638', criticoBg: '#F9E7E2',
+      atencao: '#8C5A1E', atencaoBg: '#F8EEDC', atencaoBorder: '#EFDCC0',
+      info: '#46789F', infoBg: '#E8F0F5',
+      temp: '#B8612E', tempMin: '#5B8AA6', umidSolo: '#9C7B4F', precip: '#5B8AA6',
+      accentBand: 'rgba(92,127,98,.14)', area: 'transparent',
+      umidAr: '#46789F', faixaAspersor: 'rgba(70,120,159,.14)', scrim: 'rgba(34,31,24,.4)', onAccent: '#FFFFFF',
     },
     dark: {
-      bg: '#0B0C0A', surface: '#131410', surface2: '#1C1E17', elevated: '#20221A',
-      border: '#2A2C22', text: '#ECEBE4', text2: '#9B9C8F', text3: '#7D7F73', text4: '#D9DAD0',
+      bg: '#13110D', surface: '#1B1914', surface2: '#1C1E17', elevated: '#20221A',
+      border: '#2F2B22', text: '#EEEAE0', text2: '#9B9C8F', text3: '#7D7F73', text4: '#D9DAD0',
       inputBorder: '#33362B', iconDisabled: '#4A4C3F',
-      accent: '#8FB596', accentHover: '#A9C9AE', accentSoft: '#1B2A1E', accentSofter: '#151C16',
+      accent: '#93B69A', accentHover: '#A9C9AE', accentSoft: '#1B2A1E', accentSofter: '#151C16',
       sucessoBorder: '#24382A',
-      critico: '#E2897D', criticoBg: '#2A1714',
+      critico: '#E28A7B', criticoBg: '#2A1714',
       atencao: '#E0B074', atencaoBg: '#2A2013', atencaoBorder: '#3D2F1C',
       info: '#7FA8C9', infoBg: '#16222B',
-      temp: '#E2895A', umidSolo: '#C9A876', precip: '#7FB0C9',
-      accentBand: 'rgba(143,181,150,.12)',
+      temp: '#E2895A', tempMin: '#7FB0C9', umidSolo: '#C9A876', precip: '#7FB0C9',
+      accentBand: 'rgba(143,181,150,.12)', area: 'transparent',
+      umidAr: '#7FA8C9', faixaAspersor: 'rgba(127,168,201,.16)', scrim: 'rgba(0,0,0,.55)', onAccent: '#13110D',
     },
   },
   font: {
@@ -35,6 +39,9 @@ export const theme = {
   },
   layout: {
     sidebar: '264px', topbar: '64px', content: '1440px',
+  },
+  shape: {
+    radius: '18px', radiusSm: '12px', pad: '24px', gap: '16px', row: '52px',
   },
 } as const;
 export default theme;

@@ -11,15 +11,15 @@ export default function PerfilPage() {
   return (
     <>
     <div>
-      <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '28px', lineHeight: '34px', fontWeight: '700', letterSpacing: '-.01em'}}>
+      <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '26px', lineHeight: '32px', fontWeight: '700', letterSpacing: '-.01em'}}>
         Perfil
       </h1>
       <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px'}}>
         Suas informações e preferências de acesso
       </div>
     </div>
-    <div style={{display: 'grid', gridTemplateColumns: '280px 1fr', gap: '20px', alignItems: 'start'}}>
-      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
+    <div style={{display: 'grid', gridTemplateColumns: '280px 1fr', gap: 'var(--hp-gap)', alignItems: 'start'}}>
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
         <div style={{width: '72px', height: '72px', borderRadius: '50%', background: 'var(--hp-accent)', color: '#FFFFFF', fontSize: '22px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
           AF
         </div>
@@ -33,7 +33,7 @@ export default function PerfilPage() {
           Fazenda Boa Vista · Petrolina/PE
         </div>
       </div>
-      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px'}}>
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)', display: 'flex', flexDirection: 'column', gap: 'var(--hp-gap)'}}>
         <div>
           <div style={{fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-3)', marginBottom: '12px'}}>
             DADOS PESSOAIS

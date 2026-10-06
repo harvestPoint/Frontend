@@ -15,10 +15,10 @@ export default function LotesPage() {
   return (
     <>
     <div style={{display: 'flex', gap: '24px', alignItems: 'flex-start'}}>
-      <div style={{flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '20px'}}>
+      <div style={{flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: 'var(--hp-gap)'}}>
         <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '24px'}}>
           <div>
-            <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '28px', lineHeight: '34px', fontWeight: '700', letterSpacing: '-.01em'}}>
+            <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '26px', lineHeight: '32px', fontWeight: '700', letterSpacing: '-.01em'}}>
               Lotes / Talhões
             </h1>
             <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px'}}>
@@ -32,7 +32,7 @@ export default function LotesPage() {
             Novo lote
           </div>
         </div>
-        <div style={{height: '64px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px'}}>
+        <div style={{height: '64px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px'}}>
           <div style={{flex: '1', minWidth: '0', height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px'}}>
             <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-3)'}}>
               search
@@ -61,7 +61,7 @@ export default function LotesPage() {
             download
           </span>
         </div>
-        <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', overflow: 'hidden'}}>
+        <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', overflow: 'hidden'}}>
           <div style={{overflowX: 'auto'}}>
             <table style={{width: '100%', borderCollapse: 'collapse', minWidth: '880px', tableLayout: 'fixed'}}>
               <thead>
@@ -94,7 +94,7 @@ export default function LotesPage() {
               </thead>
               <tbody>
                 <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
-                  <td style={{padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer', whiteSpace: 'nowrap'}} onClick={goLote}>
+                  <td style={{padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent-hover)', cursor: 'pointer', whiteSpace: 'nowrap'}} onClick={goLote}>
                     Lote A1
                   </td>
                   <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
@@ -113,7 +113,7 @@ export default function LotesPage() {
                     15/03/2024
                   </td>
                   <td style={{padding: '0 16px'}}>
-                    <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent)', fontSize: '12px', fontWeight: '600'}}>
+                    <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent-hover)', fontSize: '12px', fontWeight: '600'}}>
                       <span style={{width: '6px', height: '6px', borderRadius: '50%', background: 'var(--hp-accent)'}} />
                       ativo
                     </span>
@@ -128,7 +128,7 @@ export default function LotesPage() {
                   </td>
                 </tr>
                 <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
-                  <td style={{padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer', whiteSpace: 'nowrap'}}>
+                  <td style={{padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent-hover)', cursor: 'pointer', whiteSpace: 'nowrap'}}>
                     Lote B2
                   </td>
                   <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
@@ -147,7 +147,7 @@ export default function LotesPage() {
                     10/06/2024
                   </td>
                   <td style={{padding: '0 16px'}}>
-                    <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent)', fontSize: '12px', fontWeight: '600'}}>
+                    <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent-hover)', fontSize: '12px', fontWeight: '600'}}>
                       <span style={{width: '6px', height: '6px', borderRadius: '50%', background: 'var(--hp-accent)'}} />
                       ativo
                     </span>
@@ -162,7 +162,7 @@ export default function LotesPage() {
                   </td>
                 </tr>
                 <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
-                  <td style={{padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer', whiteSpace: 'nowrap'}}>
+                  <td style={{padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent-hover)', cursor: 'pointer', whiteSpace: 'nowrap'}}>
                     Lote C3
                   </td>
                   <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
@@ -221,8 +221,8 @@ export default function LotesPage() {
       </div>
       {Boolean(drawerOpen) && (
         <React.Fragment>
-        <div style={{width: '480px', flex: '0 0 480px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', boxShadow: '-12px 0 48px rgba(22,21,15,.14)', display: 'flex', flexDirection: 'column', minHeight: '720px'}}>
-          <div style={{padding: '20px', borderBottom: '1px solid var(--hp-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+        <div style={{width: '480px', flex: '0 0 480px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', boxShadow: '-12px 0 48px rgba(22,21,15,.14)', display: 'flex', flexDirection: 'column', minHeight: '720px'}}>
+          <div style={{padding: 'var(--hp-pad)', borderBottom: '1px solid var(--hp-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
             <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '20px', lineHeight: '28px', fontWeight: '700'}}>
               Novo lote
             </div>
@@ -230,7 +230,7 @@ export default function LotesPage() {
               close
             </span>
           </div>
-          <div style={{flex: '1', padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px'}}>
+          <div style={{flex: '1', padding: 'var(--hp-pad)', display: 'flex', flexDirection: 'column', gap: '18px'}}>
             <div>
               <div style={{fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-3)', marginBottom: '12px'}}>
                 IDENTIFICAÇÃO

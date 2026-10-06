@@ -21,16 +21,15 @@ function NavItem({ to, icon, label, badge }: NavItemProps) {
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        height: '44px',
-        padding: '0 12px',
-        borderRadius: '10px',
+        height: '38px',
+        padding: '0 10px',
+        borderRadius: 'var(--hp-radius-sm)',
         fontSize: '13px',
-        fontWeight: 600,
+        fontWeight: isActive ? 700 : 500,
         cursor: 'pointer',
         textDecoration: 'none',
-        color: isActive ? 'var(--hp-accent)' : 'var(--hp-text)',
+        color: isActive ? 'var(--hp-accent-hover)' : 'var(--hp-text-2)',
         background: isActive ? 'var(--hp-accent-soft)' : 'transparent',
-        boxShadow: isActive ? 'inset 3px 0 0 var(--hp-accent)' : 'none',
       })}
     >
       <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '20px', lineHeight: 1, color: 'inherit' }}>
@@ -41,7 +40,7 @@ function NavItem({ to, icon, label, badge }: NavItemProps) {
         <span
           style={{
             minWidth: '20px', height: '20px', borderRadius: '12px', background: 'var(--hp-critico)',
-            color: '#FFFFFF', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center',
+            color: '#FFFFFF', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center',
             justifyContent: 'center', padding: '0 6px',
           }}
         >
@@ -69,7 +68,7 @@ export default function Sidebar() {
     <div style={{ width: '264px', flex: '0 0 264px', background: 'var(--hp-surface)', borderRight: '1px solid var(--hp-border)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: '72px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'var(--hp-accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: 'var(--hp-radius-sm)', background: 'var(--hp-accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '20px', lineHeight: 1, color: 'var(--hp-accent)' }}>eco</span>
           </div>
           <div>
@@ -83,6 +82,7 @@ export default function Sidebar() {
         <GroupLabel>VISÃO GERAL</GroupLabel>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <NavItem to="/" icon="dashboard" label="Dashboard" />
+          <NavItem to="/clima" icon="partly_cloudy_day" label="Clima Regional" />
           <NavItem to="/alertas" icon="warning" label="Alertas" badge={4} />
         </div>
 
@@ -90,6 +90,7 @@ export default function Sidebar() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <NavItem to="/lotes" icon="grid_view" label="Lotes" />
           <NavItem to="/leituras" icon="sensors" label="Leituras IoT" />
+          <NavItem to="/automacao" icon="water_drop" label="Automação" />
         </div>
 
         <GroupLabel>INTELIGÊNCIA</GroupLabel>

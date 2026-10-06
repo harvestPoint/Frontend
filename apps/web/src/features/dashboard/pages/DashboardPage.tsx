@@ -3,12 +3,31 @@
 // Revise os TODOs antes de ligar em dados reais da API.
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { previsaoPropriedades } from '@/features/clima/data/previsaoMock';
+import { OrigemPill } from '@/features/mercado/components/OrigemPill';
+import { fmtNum } from '@/lib/uiHelpers';
+import AutomacaoDashboardCard from '@/features/automacao/components/AutomacaoDashboardCard';
+
+const DIAS_SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+function formatDiaCurto(iso: string): string {
+  const d = new Date(iso + 'T00:00:00');
+  return DIAS_SEMANA[d.getDay()];
+}
 
 export default function DashboardPage() {
 
   const navigate = useNavigate();
   const goLotes = () => navigate('/lotes');
   const goLote = () => navigate('/lotes/A1');
+  const goClima = () => navigate('/clima');
+  const goExportacao = () => navigate('/inteligencia/exportacao');
+  const previsao = previsaoPropriedades[0];
+  const previsaoSemana = previsao.dias.slice(0, 7);
+  const previsaoDiasRisco = previsaoSemana.filter((d) => d.temperaturaMax > previsao.faixaIdeal.max).length;
+  const previsaoDiasRiscoLabels = previsaoSemana
+    .filter((d) => d.temperaturaMax > previsao.faixaIdeal.max)
+    .map((d, i) => (i === 0 && d.data === previsaoSemana[0].data ? 'hoje' : formatDiaCurto(d.data)))
+    .join(', ');
   const [chips, setChips] = useState<{ label: string; onRemove: () => void }[]>([
     { label: 'Propriedade: Boa Vista', onRemove: () => setChips((cs) => cs.filter((c) => c.label !== 'Propriedade: Boa Vista')) },
   ]);
@@ -34,7 +53,7 @@ export default function DashboardPage() {
     <>
     <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '24px'}}>
       <div>
-        <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '28px', lineHeight: '34px', fontWeight: '700', letterSpacing: '-.01em'}}>
+        <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '26px', lineHeight: '32px', fontWeight: '700', letterSpacing: '-.01em'}}>
           Dashboard Climático
         </h1>
         <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px'}}>
@@ -76,7 +95,7 @@ export default function DashboardPage() {
     <div style={{display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap'}}>
       {(chips || []).map((c, __i) => (
         <React.Fragment key={__i}>
-          <div style={{height: '32px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent-soft)', border: '1px solid var(--hp-sucesso-border)', borderRadius: '22px', fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent)'}}>
+          <div style={{height: '32px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent-soft)', border: '1px solid var(--hp-sucesso-border)', borderRadius: '22px', fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent-hover)'}}>
             {c.label}
             <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '16px', lineHeight: '1', cursor: 'pointer'}} onClick={c.onRemove}>
               close
@@ -94,7 +113,7 @@ export default function DashboardPage() {
         + Sensor
       </div>
     </div>
-    <div style={{background: 'var(--hp-critico-bg)', borderLeft: '3px solid var(--hp-critico)', borderRadius: '16px', padding: '20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '24px'}}>
+    <div style={{background: 'var(--hp-critico-bg)', borderLeft: '3px solid var(--hp-critico)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '24px'}}>
       <div style={{display: 'flex', gap: '14px'}}>
         <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '24px', lineHeight: '1', color: 'var(--hp-critico)'}}>
           warning
@@ -117,8 +136,8 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-    <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '20px'}}>
-      <div style={{height: '168px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column'}}>
+    <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 'var(--hp-gap)'}}>
+      <div style={{height: '168px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)', display: 'flex', flexDirection: 'column'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
           <span style={{width: '8px', height: '8px', borderRadius: '50%', background: 'var(--hp-critico)', display: 'block'}} />
           <span style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600'}}>
@@ -148,7 +167,7 @@ export default function DashboardPage() {
           máx. 33,0 · mín. 26,4 · há 2 min
         </div>
       </div>
-      <div style={{height: '168px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column'}}>
+      <div style={{height: '168px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)', display: 'flex', flexDirection: 'column'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
           <span style={{width: '8px', height: '8px', borderRadius: '50%', background: 'var(--hp-accent)', display: 'block'}} />
           <span style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600'}}>
@@ -163,7 +182,7 @@ export default function DashboardPage() {
             %
           </span>
         </div>
-        <div style={{fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent)', marginTop: '2px'}}>
+        <div style={{fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent-hover)', marginTop: '2px'}}>
           ✓ dentro da faixa
         </div>
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginTop: 'auto'}}>
@@ -178,7 +197,7 @@ export default function DashboardPage() {
           máx. 78,1 · mín. 57,7 · há 2 min
         </div>
       </div>
-      <div style={{height: '168px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column'}}>
+      <div style={{height: '168px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)', display: 'flex', flexDirection: 'column'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
           <span style={{width: '8px', height: '8px', borderRadius: '50%', background: 'var(--hp-atencao)', display: 'block'}} />
           <span style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600'}}>
@@ -208,7 +227,7 @@ export default function DashboardPage() {
           máx. 64,9 · mín. 36,9 · há 2 min
         </div>
       </div>
-      <div style={{height: '168px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column'}}>
+      <div style={{height: '168px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)', display: 'flex', flexDirection: 'column'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
           <span style={{width: '8px', height: '8px', borderRadius: '50%', background: 'var(--hp-accent)', display: 'block'}} />
           <span style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600'}}>
@@ -223,7 +242,7 @@ export default function DashboardPage() {
             on-line
           </span>
         </div>
-        <div style={{fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent)', marginTop: '2px'}}>
+        <div style={{fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent-hover)', marginTop: '2px'}}>
           ✓ rede estável
         </div>
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginTop: 'auto'}}>
@@ -236,8 +255,8 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-    <div style={{display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', alignItems: 'start'}}>
-      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px'}}>
+    <div style={{display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--hp-gap)', alignItems: 'start'}}>
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)'}}>
         <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px'}}>
           <div>
             <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', lineHeight: '22px', fontWeight: '600'}}>
@@ -276,8 +295,8 @@ export default function DashboardPage() {
           <line x1="40" y1="90" x2="860" y2="90" stroke="var(--hp-border)" stroke-width="1" />
           <line x1="40" y1="190" x2="860" y2="190" stroke="var(--hp-border)" stroke-width="1" />
           <line x1="40" y1="240" x2="860" y2="240" stroke="var(--hp-border)" stroke-width="1" />
-          <line x1="40" y1="140" x2="860" y2="140" stroke="var(--hp-accent)" stroke-width="1" stroke-dasharray="5 5" />
-          <text x="44" y="133" style={{font: '600 12px Inter, sans-serif', fill: 'var(--hp-accent)'}}>
+          <line x1="40" y1="140" x2="860" y2="140" stroke="var(--hp-critico)" stroke-width="1" stroke-dasharray="4 4" />
+          <text x="44" y="133" style={{font: '600 12px Inter, sans-serif', fill: 'var(--hp-critico)'}}>
             limite manga 30 °C
           </text>
           <polyline points="40,215 108,218 176,220 244,222 312,225 380,228 448,231 516,234 584,232 652,229 720,226 788,224 856,221" fill="none" stroke="var(--hp-umid-solo)" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round" />
@@ -308,7 +327,8 @@ export default function DashboardPage() {
           Máxima de 33,0 °C às 13h · 4 h acima do limite · amplitude de 6,6 °C
         </div>
       </div>
-      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px'}}>
+      <div style={{display: 'flex', flexDirection: 'column', gap: 'var(--hp-gap)'}}>
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)'}}>
         <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', lineHeight: '22px', fontWeight: '600'}}>
           Alertas ativos (2)
         </div>
@@ -328,7 +348,7 @@ export default function DashboardPage() {
             <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '2px'}}>
               31,9 °C · limite 30,0 °C
             </div>
-            <div style={{marginTop: '10px', fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer'}} onClick={goLote}>
+            <div style={{marginTop: '10px', fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent-hover)', cursor: 'pointer'}} onClick={goLote}>
               Abrir lote ›
             </div>
           </div>
@@ -347,11 +367,13 @@ export default function DashboardPage() {
             <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '2px'}}>
               29,9 °C · limite 28,0 °C
             </div>
-            <div style={{marginTop: '10px', fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer'}}>
+            <div style={{marginTop: '10px', fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent-hover)', cursor: 'pointer'}}>
               Abrir lote ›
             </div>
           </div>
         </div>
+      </div>
+        <AutomacaoDashboardCard />
       </div>
     </div>
     <div>
@@ -359,12 +381,12 @@ export default function DashboardPage() {
         <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '20px', lineHeight: '28px', fontWeight: '700'}}>
           Lotes monitorados (3)
         </div>
-        <div style={{fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer'}} onClick={goLotes}>
+        <div style={{fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent-hover)', cursor: 'pointer'}} onClick={goLotes}>
           Ver todos os lotes ›
         </div>
       </div>
-      <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '20px', marginTop: '14px'}}>
-        <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px'}}>
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--hp-gap)', marginTop: '14px'}}>
+        <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)'}}>
           <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between'}}>
             <div>
               <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', lineHeight: '22px', fontWeight: '600'}}>
@@ -378,7 +400,7 @@ export default function DashboardPage() {
               warning
             </span>
           </div>
-          <div style={{display: 'flex', gap: '20px', marginTop: '16px'}}>
+          <div style={{display: 'flex', gap: 'var(--hp-gap)', marginTop: '16px'}}>
             <div>
               <div style={{fontSize: '20px', lineHeight: '26px', fontWeight: '700'}}>
                 31,9 
@@ -425,7 +447,7 @@ export default function DashboardPage() {
             </span>
           </div>
         </div>
-        <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px'}}>
+        <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)'}}>
           <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between'}}>
             <div>
               <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', lineHeight: '22px', fontWeight: '600'}}>
@@ -439,7 +461,7 @@ export default function DashboardPage() {
               error_outline
             </span>
           </div>
-          <div style={{display: 'flex', gap: '20px', marginTop: '16px'}}>
+          <div style={{display: 'flex', gap: 'var(--hp-gap)', marginTop: '16px'}}>
             <div>
               <div style={{fontSize: '20px', lineHeight: '26px', fontWeight: '700'}}>
                 29,9 
@@ -486,7 +508,7 @@ export default function DashboardPage() {
             </span>
           </div>
         </div>
-        <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px'}}>
+        <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)'}}>
           <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between'}}>
             <div>
               <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', lineHeight: '22px', fontWeight: '600'}}>
@@ -496,11 +518,11 @@ export default function DashboardPage() {
                 Crimson Seedless · 45 ha
               </div>
             </div>
-            <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '20px', lineHeight: '1', color: 'var(--hp-accent)'}}>
+            <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '20px', lineHeight: '1', color: 'var(--hp-accent-hover)'}}>
               check_circle
             </span>
           </div>
-          <div style={{display: 'flex', gap: '20px', marginTop: '16px'}}>
+          <div style={{display: 'flex', gap: 'var(--hp-gap)', marginTop: '16px'}}>
             <div>
               <div style={{fontSize: '20px', lineHeight: '26px', fontWeight: '700'}}>
                 27,4 
@@ -549,26 +571,81 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-    <div style={{height: '64px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px'}}>
-      <div style={{display: 'flex', alignItems: 'center', gap: '24px', fontSize: '13px', fontWeight: '600'}}>
-        <span>
-          Manga · UE · EUR 2,80 
-          <span style={{color: 'var(--hp-accent)'}}>
-            ▲ 2,1%
+    <div style={{display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr)', gap: 'var(--hp-gap)'}}>
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)', display: 'flex', flexDirection: 'column', gap: '14px'}}>
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'}}>
+          <div>
+            <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', fontWeight: '700'}}>
+              Previsão regional · 7 dias
+            </div>
+            <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '2px'}}>
+              Open-Meteo · Petrolina/PE · atualizado há 12 min
+            </div>
+          </div>
+          <span style={{fontSize: '13px', fontWeight: '600', color: 'var(--hp-accent-hover)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap'}} onClick={goClima}>
+            Abrir clima regional
+            <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1'}}>arrow_forward</span>
           </span>
-        </span>
-        <span style={{color: 'var(--hp-border)'}}>
-          |
-        </span>
-        <span>
-          Uva · EUA · USD 3,20 
-          <span style={{color: 'var(--hp-text-2)'}}>
-            ▬
-          </span>
-        </span>
+        </div>
+        {previsaoDiasRisco > 0 ? (
+          <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: 'var(--hp-radius-sm)', background: 'var(--hp-atencao-bg)', color: 'var(--hp-atencao)', fontSize: '13px', fontWeight: '600'}}>
+            <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1'}}>thermostat</span>
+            {previsaoDiasRisco} {previsaoDiasRisco > 1 ? 'dias' : 'dia'} acima de {previsao.faixaIdeal.max} °C nesta semana: {previsaoDiasRiscoLabels}.
+          </div>
+        ) : (
+          <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: 'var(--hp-radius-sm)', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent-hover)', fontSize: '13px', fontWeight: '600'}}>
+            <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1'}}>check_circle</span>
+            Sem dias acima de {previsao.faixaIdeal.max} °C nesta semana.
+          </div>
+        )}
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0,1fr))', gap: '6px'}}>
+          {previsaoSemana.map((d, i) => {
+            const risco = d.temperaturaMax > previsao.faixaIdeal.max;
+            const chuvaForte = d.chanceChuvaPercentual >= 50;
+            return (
+              <div
+                key={d.data}
+                style={{
+                  borderRadius: 'var(--hp-radius-sm)',
+                  background: risco ? 'var(--hp-critico-bg)' : 'var(--hp-surface-2)',
+                  padding: '10px 6px',
+                  textAlign: 'center',
+                  borderTop: risco ? '3px solid var(--hp-critico)' : '3px solid transparent',
+                }}
+              >
+                <div style={{fontSize: '12px', fontWeight: '700'}}>{i === 0 ? 'Hoje' : formatDiaCurto(d.data)}</div>
+                <div style={{fontSize: '15px', fontWeight: '700', fontVariantNumeric: 'tabular-nums', marginTop: '4px', color: risco ? 'var(--hp-critico)' : 'var(--hp-text)'}}>
+                  {fmtNum(d.temperaturaMax, 0)}°
+                </div>
+                <div style={{fontSize: '12px', color: 'var(--hp-text-2)', fontVariantNumeric: 'tabular-nums'}}>{fmtNum(d.temperaturaMin, 0)}°</div>
+                <div style={{fontSize: '12px', color: 'var(--hp-info)', marginTop: '4px', fontWeight: chuvaForte ? '700' : '400', fontVariantNumeric: 'tabular-nums'}}>
+                  {d.chanceChuvaPercentual} %
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <div style={{fontSize: '13px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer'}}>
-        Melhor semana para embarque: 12–18/10 ›
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)', display: 'flex', flexDirection: 'column', gap: '10px'}}>
+        <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', fontWeight: '700'}}>
+          Mercado
+        </div>
+        <div style={{fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-3)'}}>
+          MANGA · UNIÃO EUROPEIA
+        </div>
+        <div style={{display: 'flex', alignItems: 'baseline', gap: '6px'}}>
+          <span style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '28px', fontWeight: '700', fontVariantNumeric: 'tabular-nums'}}>EUR 2,80</span>
+          <span style={{fontSize: '12px', color: 'var(--hp-text-2)'}}>/kg</span>
+        </div>
+        <div style={{fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent-hover)'}}>▲ 2,1 % no mês</div>
+        <OrigemPill oficial label="PROHORT/Conab · 12/09" />
+        <div style={{display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px', paddingTop: '10px', marginTop: '2px', borderTop: '1px solid var(--hp-border)', fontSize: '13px'}}>
+          <span style={{color: 'var(--hp-text-2)'}}>Uva · EUA</span>
+          <span style={{fontWeight: '600', fontVariantNumeric: 'tabular-nums'}}>USD 3,20 <span style={{color: 'var(--hp-text-2)'}}>▬ estável</span></span>
+        </div>
+        <div style={{fontSize: '13px', fontWeight: '600', color: 'var(--hp-accent-hover)', cursor: 'pointer', marginTop: 'auto'}} onClick={goExportacao}>
+          Melhor semana para embarque: 12–18/10 ›
+        </div>
       </div>
     </div>
     </>

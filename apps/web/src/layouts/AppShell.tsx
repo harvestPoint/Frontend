@@ -6,9 +6,12 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 const CRUMBS: Record<string, string> = {
   '/': 'Dashboard',
+  '/dashboard': 'Dashboard',
+  '/clima': 'Clima Regional',
   '/alertas': 'Alertas',
   '/lotes': 'Lotes / Talhões',
   '/leituras': 'Leituras IoT',
+  '/automacao': 'Automação',
   '/inteligencia/colheita': 'Janela de Colheita',
   '/inteligencia/exportacao': 'Janela de Exportação',
   '/mercado': 'Mercado & Preços',
@@ -33,8 +36,11 @@ export default function AppShell() {
     <div style={{ minHeight: '100vh', background: 'var(--hp-bg)', color: 'var(--hp-text)', display: 'flex' }}>
       <Sidebar />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ height: '64px', background: 'var(--hp-surface)', borderBottom: '1px solid var(--hp-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>Início › {crumb}</div>
+        <div style={{ height: '56px', background: 'var(--hp-surface)', borderBottom: '1px solid var(--hp-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--hp-text-2)' }}>
+            HarvestPoint <span style={{ color: 'var(--hp-text-3)' }}>/</span>{' '}
+            <span style={{ color: 'var(--hp-text)', fontWeight: 600 }}>{crumb}</span>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ position: 'relative', display: 'flex', cursor: 'pointer' }} onClick={() => navigate('/alertas')}>
               <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '20px', lineHeight: 1, color: 'var(--hp-text-4)' }}>
@@ -45,7 +51,7 @@ export default function AppShell() {
 
             <div style={{ position: 'relative' }}>
               <div
-                style={{ height: '36px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                style={{ height: '36px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--hp-input-border)', borderRadius: 'var(--hp-radius-sm)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
                 onClick={() => setPropMenuOpen((v) => !v)}
               >
                 {selectedProperty}
@@ -83,7 +89,7 @@ export default function AppShell() {
           </div>
         </div>
 
-        <div style={{ flex: 1, padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1440px', width: '100%', margin: '0 auto' }}>
+        <div style={{ flex: 1, padding: '24px 32px 32px', display: 'flex', flexDirection: 'column', gap: 'var(--hp-gap)', maxWidth: '1440px', width: '100%', margin: '0 auto' }}>
           <Outlet />
         </div>
       </div>

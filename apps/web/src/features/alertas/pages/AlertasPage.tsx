@@ -11,14 +11,14 @@ export default function AlertasPage() {
   return (
     <>
     <div>
-      <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '28px', lineHeight: '34px', fontWeight: '700', letterSpacing: '-.01em'}}>
+      <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '26px', lineHeight: '32px', fontWeight: '700', letterSpacing: '-.01em'}}>
         Alertas
       </h1>
       <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px'}}>
         Notificações climáticas e operacionais · 4 ativos
       </div>
     </div>
-    <div style={{height: '64px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px'}}>
+    <div style={{height: '64px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px'}}>
       <div style={{flex: '1', minWidth: '0', height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px'}}>
         <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-3)'}}>
           search
@@ -46,7 +46,7 @@ export default function AlertasPage() {
         </span>
       </div>
     </div>
-    <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', overflow: 'hidden'}}>
+    <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', overflow: 'hidden'}}>
       <table style={{width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed'}}>
         <thead>
           <tr style={{height: '48px', background: 'var(--hp-surface-2)'}}>
@@ -84,7 +84,7 @@ export default function AlertasPage() {
             <td style={{padding: '0 16px', fontSize: '14px'}}>
               Estresse térmico — 31,9 °C, limite da manga é 30 °C
             </td>
-            <td style={{padding: '0 16px', fontSize: '14px', color: 'var(--hp-accent)', fontWeight: '600', cursor: 'pointer'}} onClick={goLote}>
+            <td style={{padding: '0 16px', fontSize: '14px', color: 'var(--hp-accent-hover)', fontWeight: '600', cursor: 'pointer'}} onClick={goLote}>
               Lote A1
             </td>
             <td style={{padding: '0 16px', fontSize: '14px'}}>
@@ -115,7 +115,7 @@ export default function AlertasPage() {
             <td style={{padding: '0 16px', fontSize: '14px'}}>
               Umidade do solo abaixo do ideal — 22,4%, faixa 35–55%
             </td>
-            <td style={{padding: '0 16px', fontSize: '14px', color: 'var(--hp-accent)', fontWeight: '600', cursor: 'pointer'}}>
+            <td style={{padding: '0 16px', fontSize: '14px', color: 'var(--hp-accent-hover)', fontWeight: '600', cursor: 'pointer'}}>
               Lote C3
             </td>
             <td style={{padding: '0 16px', fontSize: '14px'}}>
@@ -146,7 +146,7 @@ export default function AlertasPage() {
             <td style={{padding: '0 16px', fontSize: '14px'}}>
               Sensor IOT-003 com leituras instáveis
             </td>
-            <td style={{padding: '0 16px', fontSize: '14px', color: 'var(--hp-accent)', fontWeight: '600', cursor: 'pointer'}}>
+            <td style={{padding: '0 16px', fontSize: '14px', color: 'var(--hp-accent-hover)', fontWeight: '600', cursor: 'pointer'}}>
               Lote C3
             </td>
             <td style={{padding: '0 16px', fontSize: '14px', color: 'var(--hp-text-2)'}}>
@@ -177,7 +177,7 @@ export default function AlertasPage() {
             <td style={{padding: '0 16px', fontSize: '14px'}}>
               Janela de colheita se aproxima — 22/10
             </td>
-            <td style={{padding: '0 16px', fontSize: '14px', color: 'var(--hp-accent)', fontWeight: '600', cursor: 'pointer'}} onClick={goLote}>
+            <td style={{padding: '0 16px', fontSize: '14px', color: 'var(--hp-accent-hover)', fontWeight: '600', cursor: 'pointer'}} onClick={goLote}>
               Lote A1
             </td>
             <td style={{padding: '0 16px', fontSize: '14px', color: 'var(--hp-text-2)'}}>

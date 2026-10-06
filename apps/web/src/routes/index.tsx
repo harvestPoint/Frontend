@@ -10,10 +10,12 @@ import LoginPage from '@/features/auth/pages/LoginPage';
 import SignupPage from '@/features/auth/pages/SignupPage';
 
 import DashboardPage from '@/features/dashboard/pages/DashboardPage';
+import ClimaRegionalPage from '@/features/clima/pages/ClimaRegionalPage';
 import AlertasPage from '@/features/alertas/pages/AlertasPage';
 import LotesPage from '@/features/lotes/pages/LotesPage';
 import LoteDetalhePage from '@/features/lotes/pages/LoteDetalhePage';
 import LeiturasPage from '@/features/leituras/pages/LeiturasPage';
+import AutomacaoPage from '@/features/automacao/pages/AutomacaoPage';
 import JanelaColheitaPage from '@/features/inteligencia/pages/JanelaColheitaPage';
 import JanelaExportacaoPage from '@/features/inteligencia/pages/JanelaExportacaoPage';
 import MercadoPage from '@/features/mercado/pages/MercadoPage';
@@ -46,10 +48,12 @@ export default function AppRoutes() {
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/clima" element={<ClimaRegionalPage />} />
         <Route path="/alertas" element={<AlertasPage />} />
         <Route path="/lotes" element={<LotesPage />} />
         <Route path="/lotes/:id" element={<LoteDetalhePage />} />
         <Route path="/leituras" element={<LeiturasPage />} />
+        <Route path="/automacao" element={<AutomacaoPage />} />
         <Route path="/inteligencia/colheita" element={<JanelaColheitaPage />} />
         <Route path="/inteligencia/exportacao" element={<JanelaExportacaoPage />} />
         <Route path="/mercado" element={<MercadoPage />} />

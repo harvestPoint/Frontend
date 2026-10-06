@@ -1,31 +1,78 @@
 // Gerado a partir do design aprovado no Claude Design (HarvestPoint.dc.html)
 // e adaptado para React + TypeScript + Tailwind pelo pipeline de migração.
 // Revise os TODOs antes de ligar em dados reais da API.
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import PrevisaoRegua from '@/features/clima/components/PrevisaoRegua';
+import { previsaoPropriedades } from '@/features/clima/data/previsaoMock';
+
+type LoteTab = 'clima' | 'leituras' | 'alertas' | 'operacoes' | 'historico' | 'previsao';
+
+const TABS: { key: LoteTab; label: string }[] = [
+  { key: 'clima', label: 'Clima' },
+  { key: 'previsao', label: 'Previsão' },
+  { key: 'leituras', label: 'Leituras' },
+  { key: 'alertas', label: 'Alertas (2)' },
+  { key: 'operacoes', label: 'Operações' },
+  { key: 'historico', label: 'Histórico' },
+];
 
 export default function LoteDetalhePage() {
 
   const navigate = useNavigate();
   const goLotes = () => navigate('/lotes');
+  const [activeTab, setActiveTab] = useState<LoteTab>('clima');
+  // TODO: trocar pela propriedade real do lote quando o backend existir —
+  // por ora, o Lote A1 pertence à Fazenda Boa Vista (mesma faixa ideal de
+  // manga já usada no restante desta tela).
+  const previsao = previsaoPropriedades[0];
+
+  // TODO: mocks tipados desta rodada — substituir pelos endpoints reais
+  // (recomendação agroclimática, leituras do sensor do lote, alertas do
+  // lote, histórico de manejo e de safras) quando o backend existir.
+  const oQueFazer: { icone: string; cor: string; texto: string }[] = [
+    { icone: 'water_drop', cor: 'var(--hp-critico)', texto: 'Antecipar irrigação para 5h hoje e quarta — solo em 22,4 %.' },
+    { icone: 'pause_circle', cor: 'var(--hp-atencao)', texto: 'Suspender irrigação qui–sex; chuva prevista de 18 mm.' },
+    { icone: 'event_available', cor: 'var(--hp-text-2)', texto: 'Colheita estimada 22/10–29/10 segue mantida.' },
+  ];
+  const leiturasLote: { hora: string; valor: string; seta: string; cor: string }[] = [
+    { hora: '09h04', valor: '31,9 °C', seta: '▲', cor: 'var(--hp-critico)' },
+    { hora: '08h54', valor: '30,6 °C', seta: '▲', cor: 'var(--hp-atencao)' },
+    { hora: '08h44', valor: '29,8 °C', seta: '', cor: 'var(--hp-text)' },
+  ];
+  const alertasLote: { titulo: string; tempo: string; acao: string; cor: string }[] = [
+    { titulo: 'Estresse térmico', tempo: 'há 3 h', acao: '31,9 °C · limite 30,0 °C — considerar irrigação de alívio', cor: 'var(--hp-critico)' },
+    { titulo: 'Solo abaixo da faixa', tempo: 'há 6 h', acao: '22,4 % · ideal ≥ 50 % — antecipar próxima irrigação', cor: 'var(--hp-atencao)' },
+  ];
+  const operacoesLote: { acao: string; data: string }[] = [
+    { acao: 'Irrigação 4 h', data: '28/09' },
+    { acao: 'Adubação K', data: '22/09' },
+    { acao: 'Indução floral', data: '10/07' },
+  ];
+  const historicoLote: { label: string; valor: string }[] = [
+    { label: 'Safra 2025', valor: '19,6 t/ha' },
+    { label: 'Safra 2024', valor: '18,2 t/ha' },
+    { label: 'Perda média', valor: '6,4 %' },
+  ];
 
   return (
     <>
-    <div style={{fontSize: '13px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer'}} onClick={goLotes}>
+    <div style={{fontSize: '13px', fontWeight: '600', color: 'var(--hp-accent-hover)', cursor: 'pointer'}} onClick={goLotes}>
       ‹ Lotes
     </div>
     <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '24px'}}>
       <div>
         <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-          <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '28px', lineHeight: '34px', fontWeight: '700', letterSpacing: '-.01em'}}>
+          <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '26px', lineHeight: '32px', fontWeight: '700', letterSpacing: '-.01em'}}>
             Lote A1 · Manga Tommy Atkins
           </h1>
-          <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent)', fontSize: '12px', fontWeight: '600'}}>
+          <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent-hover)', fontSize: '12px', fontWeight: '600'}}>
             <span style={{width: '6px', height: '6px', borderRadius: '50%', background: 'var(--hp-accent)'}} />
             ativo
           </span>
         </div>
         <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '6px'}}>
-          Fazenda Boa Vista · 120 ha · plantio 15/03/2024 · sensor IOT-001
+          Fazenda Boa Vista · 120 ha · plantio 15/03/2024 · sensor IOT-001 · ciclo dia 98 de 120
         </div>
       </div>
       <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
@@ -40,7 +87,7 @@ export default function LoteDetalhePage() {
         </span>
       </div>
     </div>
-    <div style={{background: 'var(--hp-critico-bg)', borderLeft: '3px solid var(--hp-critico)', borderRadius: '16px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px'}}>
+    <div style={{background: 'var(--hp-critico-bg)', borderLeft: '3px solid var(--hp-critico)', borderRadius: 'var(--hp-radius)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px'}}>
       <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '22px', lineHeight: '1', color: 'var(--hp-critico)'}}>
         warning
       </span>
@@ -52,8 +99,8 @@ export default function LoteDetalhePage() {
         , limite da manga é 30 °C.
       </div>
     </div>
-    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'}}>
-      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px'}}>
+    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--hp-gap)'}}>
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)'}}>
         <div style={{fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-3)'}}>
           CICLO DA CULTURA
         </div>
@@ -72,7 +119,7 @@ export default function LoteDetalhePage() {
           Colheita estimada 22/10 – 29/10
         </div>
       </div>
-      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px'}}>
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)'}}>
         <div style={{fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-3)'}}>
           CONDIÇÕES AGORA
         </div>
@@ -95,7 +142,7 @@ export default function LoteDetalhePage() {
             <span style={{fontSize: '20px', fontWeight: '700', fontVariantNumeric: 'tabular-nums', textAlign: 'right'}}>
               58,0 %
             </span>
-            <span style={{fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', whiteSpace: 'nowrap'}}>
+            <span style={{fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent-hover)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', whiteSpace: 'nowrap'}}>
               ✓ dentro
             </span>
           </div>
@@ -117,7 +164,7 @@ export default function LoteDetalhePage() {
             <span style={{fontSize: '20px', fontWeight: '700', fontVariantNumeric: 'tabular-nums', textAlign: 'right'}}>
               0,0 mm
             </span>
-            <span style={{fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', whiteSpace: 'nowrap'}}>
+            <span style={{fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent-hover)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', whiteSpace: 'nowrap'}}>
               ✓ dentro
             </span>
           </div>
@@ -125,23 +172,105 @@ export default function LoteDetalhePage() {
       </div>
     </div>
     <div style={{display: 'flex', alignItems: 'center', gap: '24px', borderBottom: '1px solid var(--hp-border)'}}>
-      <div style={{padding: '12px 2px', fontSize: '13px', fontWeight: '600', color: 'var(--hp-text)', borderBottom: '2px solid var(--hp-accent)'}}>
-        Clima
-      </div>
-      <div style={{padding: '12px 2px', fontSize: '13px', fontWeight: '600', color: 'var(--hp-text-2)', cursor: 'pointer'}}>
-        Leituras
-      </div>
-      <div style={{padding: '12px 2px', fontSize: '13px', fontWeight: '600', color: 'var(--hp-text-2)', cursor: 'pointer'}}>
-        Alertas (4)
-      </div>
-      <div style={{padding: '12px 2px', fontSize: '13px', fontWeight: '600', color: 'var(--hp-text-2)', cursor: 'pointer'}}>
-        Operações
-      </div>
-      <div style={{padding: '12px 2px', fontSize: '13px', fontWeight: '600', color: 'var(--hp-text-2)', cursor: 'pointer'}}>
-        Histórico
-      </div>
+      {TABS.map((tab) => (
+        <div
+          key={tab.key}
+          style={{
+            padding: '12px 2px',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: activeTab === tab.key ? 'var(--hp-text)' : 'var(--hp-text-2)',
+            borderBottom: activeTab === tab.key ? '2px solid var(--hp-accent)' : '2px solid transparent',
+            cursor: 'pointer',
+          }}
+          onClick={() => setActiveTab(tab.key)}
+        >
+          {tab.label}
+        </div>
+      ))}
     </div>
-    <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px'}}>
+    {activeTab === 'previsao' && (
+      <div style={{display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr)', gap: 'var(--hp-gap)'}}>
+        <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)'}}>
+          <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', lineHeight: '22px', fontWeight: '700', marginBottom: '14px'}}>
+            Previsão dos próximos {previsao.dias.length} dias
+          </div>
+          <PrevisaoRegua dias={previsao.dias} faixaIdeal={previsao.faixaIdeal} />
+        </div>
+        <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)', display: 'flex', flexDirection: 'column', gap: '12px'}}>
+          <div style={{fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-3)'}}>
+            O QUE FAZER NESTE LOTE
+          </div>
+          {oQueFazer.map((acao, i) => (
+            <div key={i} style={{display: 'flex', gap: '10px', fontSize: '13px', lineHeight: '19px'}}>
+              <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: acao.cor, flexShrink: 0}}>{acao.icone}</span>
+              <span>{acao.texto}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+    {activeTab === 'leituras' && (
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', overflow: 'hidden'}}>
+        <div style={{padding: '14px var(--hp-pad)', borderBottom: '1px solid var(--hp-border)'}}>
+          <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', fontWeight: '700'}}>Leituras</div>
+          <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '2px'}}>Tabela filtrada no sensor IOT-001 (deste lote)</div>
+        </div>
+        {leiturasLote.map((l, i) => (
+          <div key={i} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 'var(--hp-row)', padding: '0 var(--hp-pad)', borderTop: i === 0 ? 'none' : '1px solid var(--hp-border)', fontSize: '13px', fontVariantNumeric: 'tabular-nums'}}>
+            <span style={{color: 'var(--hp-text-2)'}}>{l.hora}</span>
+            <span style={{fontWeight: '600', color: l.cor}}>{l.valor} {l.seta}</span>
+          </div>
+        ))}
+      </div>
+    )}
+    {activeTab === 'alertas' && (
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', overflow: 'hidden'}}>
+        <div style={{padding: '14px var(--hp-pad)', borderBottom: '1px solid var(--hp-border)'}}>
+          <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', fontWeight: '700'}}>Alertas (2)</div>
+          <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '2px'}}>Só os alertas deste lote, com ação sugerida</div>
+        </div>
+        {alertasLote.map((a, i) => (
+          <div key={i} style={{display: 'flex', gap: '10px', padding: '14px var(--hp-pad)', borderTop: i === 0 ? 'none' : '1px solid var(--hp-border)'}}>
+            <span style={{width: '6px', height: '6px', borderRadius: '50%', background: a.cor, marginTop: '6px', flexShrink: 0}} />
+            <div>
+              <div style={{fontSize: '13px', fontWeight: '600'}}>{a.titulo} · {a.tempo}</div>
+              <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '2px'}}>{a.acao}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+    {activeTab === 'operacoes' && (
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', overflow: 'hidden'}}>
+        <div style={{padding: '14px var(--hp-pad)', borderBottom: '1px solid var(--hp-border)'}}>
+          <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', fontWeight: '700'}}>Operações</div>
+          <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '2px'}}>Linha do tempo de manejo deste lote</div>
+        </div>
+        {operacoesLote.map((o, i) => (
+          <div key={i} style={{display: 'flex', justifyContent: 'space-between', height: 'var(--hp-row)', alignItems: 'center', padding: '0 var(--hp-pad)', borderTop: i === 0 ? 'none' : '1px solid var(--hp-border)', fontSize: '13px'}}>
+            <span>{o.acao}</span>
+            <span style={{color: 'var(--hp-text-2)', fontVariantNumeric: 'tabular-nums'}}>{o.data}</span>
+          </div>
+        ))}
+      </div>
+    )}
+    {activeTab === 'historico' && (
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', overflow: 'hidden'}}>
+        <div style={{padding: '14px var(--hp-pad)', borderBottom: '1px solid var(--hp-border)'}}>
+          <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', fontWeight: '700'}}>Histórico</div>
+          <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '2px'}}>Safras anteriores deste lote</div>
+        </div>
+        {historicoLote.map((h, i) => (
+          <div key={i} style={{display: 'flex', justifyContent: 'space-between', height: 'var(--hp-row)', alignItems: 'center', padding: '0 var(--hp-pad)', borderTop: i === 0 ? 'none' : '1px solid var(--hp-border)', fontSize: '13px', fontVariantNumeric: 'tabular-nums'}}>
+            <span>{h.label}</span>
+            <span style={{fontWeight: '600'}}>{h.valor}</span>
+          </div>
+        ))}
+      </div>
+    )}
+    {activeTab === 'clima' && (
+    <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)'}}>
       <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px'}}>
         <div>
           <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', lineHeight: '22px', fontWeight: '600'}}>
@@ -184,8 +313,8 @@ export default function LoteDetalhePage() {
         <line x1="40" y1="90" x2="860" y2="90" stroke="var(--hp-border)" stroke-width="1" />
         <line x1="40" y1="190" x2="860" y2="190" stroke="var(--hp-border)" stroke-width="1" />
         <line x1="40" y1="240" x2="860" y2="240" stroke="var(--hp-border)" stroke-width="1" />
-        <line x1="40" y1="140" x2="860" y2="140" stroke="var(--hp-accent)" stroke-width="1" stroke-dasharray="5 5" />
-        <text x="44" y="133" style={{font: '600 12px Inter, sans-serif', fill: 'var(--hp-accent)'}}>
+        <line x1="40" y1="140" x2="860" y2="140" stroke="var(--hp-critico)" stroke-width="1" stroke-dasharray="4 4" />
+        <text x="44" y="133" style={{font: '600 12px Inter, sans-serif', fill: 'var(--hp-critico)'}}>
           limite manga 30 °C
         </text>
         <polyline points="40,215 108,218 176,220 244,222 312,225 380,228 448,231 516,234 584,232 652,229 720,226 788,224 856,221" fill="none" stroke="var(--hp-umid-solo)" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round" />
@@ -217,6 +346,7 @@ export default function LoteDetalhePage() {
         Máxima de 33,0 °C às 13h · 4 h acima do limite · amplitude de 6,6 °C
       </div>
     </div>
+    )}
     </>
   );
 }

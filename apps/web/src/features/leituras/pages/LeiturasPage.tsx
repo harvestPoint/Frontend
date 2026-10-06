@@ -2,13 +2,17 @@
 // e adaptado para React + TypeScript + Tailwind pelo pipeline de migração.
 // Revise os TODOs antes de ligar em dados reais da API.
 
+import { useState } from 'react';
+import DispositivoDrawer from '@/features/automacao/components/DispositivoDrawer';
+
 export default function LeiturasPage() {
+  const [kitAberto, setKitAberto] = useState<string | null>(null);
 
   return (
     <>
     <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '24px'}}>
       <div>
-        <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '28px', lineHeight: '34px', fontWeight: '700', letterSpacing: '-.01em'}}>
+        <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '26px', lineHeight: '32px', fontWeight: '700', letterSpacing: '-.01em'}}>
           Leituras IoT
         </h1>
         <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px'}}>
@@ -30,11 +34,11 @@ export default function LeiturasPage() {
         </div>
       </div>
     </div>
-    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'stretch'}}>
-      <div style={{border: '1px solid var(--hp-sucesso-border)', background: 'var(--hp-bg)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column'}}>
+    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--hp-gap)', alignItems: 'stretch'}}>
+      <div style={{border: '1px solid var(--hp-sucesso-border)', background: 'var(--hp-bg)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)', display: 'flex', flexDirection: 'column'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
           <span style={{width: '8px', height: '8px', borderRadius: '50%', background: 'var(--hp-accent)', display: 'inline-block', animation: 'hpPulse 2s ease-in-out infinite'}} />
-          <span style={{fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-accent)'}}>
+          <span style={{fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-accent-hover)'}}>
             SIMULADOR DE TELEMETRIA · RODANDO
           </span>
         </div>
@@ -70,7 +74,7 @@ export default function LeiturasPage() {
           42 leituras geradas nesta sessão
         </div>
       </div>
-      <div style={{border: '1px solid var(--hp-border)', background: 'var(--hp-surface)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column'}}>
+      <div style={{border: '1px solid var(--hp-border)', background: 'var(--hp-surface)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)', display: 'flex', flexDirection: 'column'}}>
         <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', lineHeight: '22px', fontWeight: '600'}}>
           Registro manual de leitura
         </div>
@@ -129,7 +133,7 @@ export default function LeiturasPage() {
         </div>
       </div>
     </div>
-    <div style={{height: '64px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px'}}>
+    <div style={{height: '64px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px'}}>
       <div style={{flex: '1', minWidth: '0', height: '44px', border: '1px solid var(--hp-input-border)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px'}}>
         <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-3)'}}>
           search
@@ -162,7 +166,7 @@ export default function LeiturasPage() {
         só fora da faixa
       </div>
     </div>
-    <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', overflow: 'hidden'}}>
+    <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', overflow: 'hidden'}}>
       <div style={{overflowX: 'auto'}}>
         <table style={{width: '100%', borderCollapse: 'collapse', minWidth: '1020px', tableLayout: 'fixed'}}>
           <thead>
@@ -198,8 +202,10 @@ export default function LeiturasPage() {
           </thead>
           <tbody>
             <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)', background: 'var(--hp-accent-soft)', animation: 'hpFade 3s forwards'}}>
-              <td style={{padding: '0 16px', fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: 'var(--hp-text)'}}>
-                IOT-001
+              <td style={{padding: '0 16px', fontSize: '14px'}}>
+                <button type="button" onClick={() => setKitAberto('IOT-001')} title="Abrir o dispositivo IOT-001" style={{border: 0, background: 'transparent', padding: 0, cursor: 'pointer', fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: 'var(--hp-accent-hover)', textDecoration: 'underline', textUnderlineOffset: '3px'}}>
+                  IOT-001
+                </button>
               </td>
               <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
                 Lote A1
@@ -227,8 +233,10 @@ export default function LeiturasPage() {
               </td>
             </tr>
             <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
-              <td style={{padding: '0 16px', fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: 'var(--hp-text)'}}>
-                IOT-002
+              <td style={{padding: '0 16px', fontSize: '14px'}}>
+                <button type="button" onClick={() => setKitAberto('IOT-002')} title="Abrir o dispositivo IOT-002" style={{border: 0, background: 'transparent', padding: 0, cursor: 'pointer', fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: 'var(--hp-accent-hover)', textDecoration: 'underline', textUnderlineOffset: '3px'}}>
+                  IOT-002
+                </button>
               </td>
               <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
                 Lote B2
@@ -256,8 +264,10 @@ export default function LeiturasPage() {
               </td>
             </tr>
             <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
-              <td style={{padding: '0 16px', fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: 'var(--hp-text)'}}>
-                IOT-001
+              <td style={{padding: '0 16px', fontSize: '14px'}}>
+                <button type="button" onClick={() => setKitAberto('IOT-001')} title="Abrir o dispositivo IOT-001" style={{border: 0, background: 'transparent', padding: 0, cursor: 'pointer', fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: 'var(--hp-accent-hover)', textDecoration: 'underline', textUnderlineOffset: '3px'}}>
+                  IOT-001
+                </button>
               </td>
               <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
                 Lote A1
@@ -285,8 +295,10 @@ export default function LeiturasPage() {
               </td>
             </tr>
             <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
-              <td style={{padding: '0 16px', fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: 'var(--hp-text)'}}>
-                IOT-003
+              <td style={{padding: '0 16px', fontSize: '14px'}}>
+                <button type="button" onClick={() => setKitAberto('IOT-003')} title="Abrir o dispositivo IOT-003" style={{border: 0, background: 'transparent', padding: 0, cursor: 'pointer', fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: 'var(--hp-accent-hover)', textDecoration: 'underline', textUnderlineOffset: '3px'}}>
+                  IOT-003
+                </button>
               </td>
               <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
                 Lote C3
@@ -328,6 +340,7 @@ export default function LeiturasPage() {
         </div>
       </div>
     </div>
+    <DispositivoDrawer kitId={kitAberto} aoFechar={() => setKitAberto(null)} largura={440} />
     </>
   );
 }

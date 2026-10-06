@@ -7,15 +7,15 @@ export default function LogisticaPage() {
   return (
     <>
     <div>
-      <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '28px', lineHeight: '34px', fontWeight: '700', letterSpacing: '-.01em'}}>
+      <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '26px', lineHeight: '32px', fontWeight: '700', letterSpacing: '-.01em'}}>
         Logística de Exportação
       </h1>
       <div style={{fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px'}}>
-        Comparação de modais e envios em andamento · 4 registros
+        Comparação de modais · risco climático da previsão regional · 4 registros
       </div>
     </div>
-    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'}}>
-      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px'}}>
+    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--hp-gap)'}}>
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
           <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '22px', lineHeight: '1', color: 'var(--hp-info)'}}>
             flight
@@ -30,7 +30,7 @@ export default function LogisticaPage() {
               Tempo
             </span>
             <div style={{flex: '1', height: '6px', borderRadius: '3px', background: 'var(--hp-surface-2)'}}>
-              <div style={{width: '7%', height: '6px', borderRadius: '3px', background: 'var(--hp-info)'}} />
+              <div style={{width: '7%', height: '6px', borderRadius: '3px', background: 'var(--hp-text-2)'}} />
             </div>
             <span style={{width: '56px', textAlign: 'right', fontSize: '12px', fontVariantNumeric: 'tabular-nums'}}>
               24 h
@@ -41,7 +41,7 @@ export default function LogisticaPage() {
               Custo
             </span>
             <div style={{flex: '1', height: '6px', borderRadius: '3px', background: 'var(--hp-surface-2)'}}>
-              <div style={{width: '100%', height: '6px', borderRadius: '3px', background: 'var(--hp-info)'}} />
+              <div style={{width: '100%', height: '6px', borderRadius: '3px', background: 'var(--hp-text-2)'}} />
             </div>
             <span style={{width: '56px', textAlign: 'right', fontSize: '12px', fontVariantNumeric: 'tabular-nums'}}>
               R$ 32k
@@ -52,13 +52,18 @@ export default function LogisticaPage() {
           <span style={{fontSize: '13px', fontWeight: '600'}}>
             LATAM Cargo
           </span>
-          <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent)', fontSize: '12px', fontWeight: '600'}}>
+          <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent-hover)', fontSize: '12px', fontWeight: '600'}}>
             <span style={{width: '6px', height: '6px', borderRadius: '50%', background: 'var(--hp-accent)'}} />
             em operação
           </span>
         </div>
+        {/* TODO: substituir por dado real da API (cruzamento rota × previsão regional) */}
+        <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', fontSize: '12px', color: 'var(--hp-text-2)'}}>
+          <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '16px', lineHeight: '1'}}>cloud_done</span>
+          Sem impacto climático previsto na rota nos próximos 7 dias.
+        </div>
       </div>
-      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px'}}>
+      <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', padding: 'var(--hp-pad)'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
           <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '22px', lineHeight: '1', color: 'var(--hp-info)'}}>
             directions_boat
@@ -73,7 +78,7 @@ export default function LogisticaPage() {
               Tempo
             </span>
             <div style={{flex: '1', height: '6px', borderRadius: '3px', background: 'var(--hp-surface-2)'}}>
-              <div style={{width: '100%', height: '6px', borderRadius: '3px', background: 'var(--hp-umid-solo)'}} />
+              <div style={{width: '100%', height: '6px', borderRadius: '3px', background: 'var(--hp-text-2)'}} />
             </div>
             <span style={{width: '56px', textAlign: 'right', fontSize: '12px', fontVariantNumeric: 'tabular-nums'}}>
               15 dias
@@ -84,7 +89,7 @@ export default function LogisticaPage() {
               Custo
             </span>
             <div style={{flex: '1', height: '6px', borderRadius: '3px', background: 'var(--hp-surface-2)'}}>
-              <div style={{width: '58%', height: '6px', borderRadius: '3px', background: 'var(--hp-umid-solo)'}} />
+              <div style={{width: '58%', height: '6px', borderRadius: '3px', background: 'var(--hp-text-2)'}} />
             </div>
             <span style={{width: '56px', textAlign: 'right', fontSize: '12px', fontVariantNumeric: 'tabular-nums'}}>
               R$ 18,5k
@@ -100,33 +105,41 @@ export default function LogisticaPage() {
             aguardando embarque
           </span>
         </div>
+        {/* TODO: substituir por dado real da API (cruzamento rota × previsão regional) */}
+        <div style={{display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '12px', padding: '10px 12px', borderRadius: 'var(--hp-radius-sm)', background: 'var(--hp-atencao-bg)', fontSize: '12px', lineHeight: '17px', color: 'var(--hp-atencao)', fontWeight: '600'}}>
+          <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '16px', lineHeight: '1', flexShrink: 0}}>cloud_alert</span>
+          Chuva de 80 % em Petrolina na sexta pode atrasar o carregamento em 1 dia. Antecipar para quinta de manhã.
+        </div>
       </div>
     </div>
-    <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', overflow: 'hidden'}}>
+    <div style={{background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: 'var(--hp-radius)', overflow: 'hidden'}}>
       <div style={{overflowX: 'auto'}}>
         <table style={{width: '100%', borderCollapse: 'collapse', minWidth: '980px', tableLayout: 'fixed'}}>
           <thead>
             <tr style={{height: '48px', background: 'var(--hp-surface-2)'}}>
-              <th style={{width: '14%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
+              <th style={{width: '12%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
                 ORIGEM
               </th>
-              <th style={{width: '17%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
+              <th style={{width: '15%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
                 DESTINO
               </th>
-              <th style={{width: '11%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
+              <th style={{width: '10%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
                 MODAL
               </th>
-              <th style={{width: '9%', textAlign: 'right', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
+              <th style={{width: '8%', textAlign: 'right', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
                 TEMPO
               </th>
-              <th style={{width: '13%', textAlign: 'right', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
+              <th style={{width: '12%', textAlign: 'right', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
                 CUSTO
               </th>
-              <th style={{width: '16%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
+              <th style={{width: '14%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
                 TRANSPORTADORA
               </th>
-              <th style={{width: '20%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
+              <th style={{width: '17%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
                 SITUAÇÃO
+              </th>
+              <th style={{width: '12%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
+                CLIMA
               </th>
             </tr>
           </thead>
@@ -161,6 +174,9 @@ export default function LogisticaPage() {
                   em trânsito
                 </span>
               </td>
+              <td style={{padding: '0 16px', fontSize: '12px', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
+                sem risco
+              </td>
             </tr>
             <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
               <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
@@ -192,6 +208,12 @@ export default function LogisticaPage() {
                   aguardando embarque
                 </span>
               </td>
+              <td style={{padding: '0 16px', whiteSpace: 'nowrap'}}>
+                <span style={{display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: '600', color: 'var(--hp-atencao)'}}>
+                  <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '14px', lineHeight: '1'}}>cloud_alert</span>
+                  chuva sex
+                </span>
+              </td>
             </tr>
             <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
               <td style={{padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap'}}>
@@ -218,10 +240,13 @@ export default function LogisticaPage() {
                 LATAM Cargo
               </td>
               <td style={{padding: '0 16px', whiteSpace: 'nowrap'}}>
-                <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent)', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap'}}>
+                <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent-hover)', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap'}}>
                   <span style={{width: '6px', height: '6px', borderRadius: '50%', background: 'var(--hp-accent)', flexShrink: '0'}} />
                   entregue
                 </span>
+              </td>
+              <td style={{padding: '0 16px', fontSize: '12px', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
+                —
               </td>
             </tr>
             <tr style={{height: '52px', borderTop: '1px solid var(--hp-border)'}}>
@@ -253,6 +278,9 @@ export default function LogisticaPage() {
                   <span style={{width: '6px', height: '6px', borderRadius: '50%', background: 'var(--hp-info)', flexShrink: '0'}} />
                   em trânsito
                 </span>
+              </td>
+              <td style={{padding: '0 16px', fontSize: '12px', color: 'var(--hp-text-2)', whiteSpace: 'nowrap'}}>
+                sem risco
               </td>
             </tr>
           </tbody>
