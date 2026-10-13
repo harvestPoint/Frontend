@@ -99,6 +99,13 @@ export interface Recomendacao {
   dias_decorridos?: number;
   ciclo_medio_dias?: number;
   dias_restantes?: number;
+  modelo_ml?: {
+    versao: string;
+    grau_brix_estimado: number;
+    qualidade_safra: string;
+    risco_fitossanitario: string;
+    gdd_acumulado: number;
+  };
 }
 
 export interface Propriedade {
@@ -253,6 +260,7 @@ export async function signup(payload: {
   email: string;
   senha: string;
   role: UserRole;
+  propriedade?: string;
   fazenda?: FazendaInput;
   cpf_cnpj?: string;
   telefone?: string;
@@ -455,6 +463,7 @@ export interface MercadoResponse {
   data: PrecoMercado[];
   resumo_culturas: PrecoMercado[];
   dolar: CotacaoDolar;
+  euro?: CotacaoDolar;
   exportacao: PrecoExportacao[];
 }
 

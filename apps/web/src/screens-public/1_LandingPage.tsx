@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DemoGrafico, { DemoPassos, ModoCards, useDemo } from './AutomacaoDemo';
+import Logo from '@/components/Logo';
 
 // ---------------------------------------------------------------------------
 // Dados (mock tipado)
@@ -352,8 +353,7 @@ export default function LandingPage() {
         <header className={`lp-head${rolou ? ' scrolled' : ''}`}>
           <div className="lp-top">
             <div className="lp-logo">
-              <div className="lp-logo-box"><Ic nome="eco" size={20} color="#5C7F62" /></div>
-              <span className="lp-logo-txt">HarvestPoint</span>
+              <Logo size={36} textColor="#221F18" />
             </div>
             <nav className="lp-nav-links" aria-label="Seções">
               {SECOES.map(([rotulo, id]) => (

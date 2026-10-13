@@ -55,6 +55,10 @@ export default function ClimaComparativo({ latitude, longitude, local, leitura }
   const difUmid = clima && umidHectare != null ? +(umidHectare - clima.agora.umidade).toFixed(1) : null;
   const tempo = clima ? descreverTempo(clima.agora.codigo_tempo) : null;
 
+  const mediaMaxRegional = clima && clima.dias.length > 0 ? (clima.dias.reduce((acc, d) => acc + d.temp_max, 0) / clima.dias.length).toFixed(1) : '--';
+  const mediaMinRegional = clima && clima.dias.length > 0 ? (clima.dias.reduce((acc, d) => acc + d.temp_min, 0) / clima.dias.length).toFixed(1) : '--';
+  const acumuladoChuva = clima && clima.dias.length > 0 ? clima.dias.reduce((acc, d) => acc + d.chuva_mm, 0).toFixed(1) : '0';
+
   return (
     <div style={card}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
@@ -124,21 +128,33 @@ export default function ClimaComparativo({ latitude, longitude, local, leitura }
 
       {/* Previsão de 7 dias da região */}
       {clima ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(72px, 1fr))', gap: '8px', marginTop: '16px', overflowX: 'auto' }}>
-          {clima.dias.map((d) => {
-            const t = descreverTempo(d.codigo_tempo);
-            const dia = DIAS[new Date(`${d.data}T12:00:00`).getDay()];
-            return (
-              <div key={d.data} title={t.texto} style={{ background: 'var(--hp-surface-2)', borderRadius: '12px', padding: '10px 6px', textAlign: 'center' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600 }}>{dia}</div>
-                <span style={{ ...icone, fontSize: '22px', color: 'var(--hp-text-2)', display: 'block', margin: '6px 0' }}>{t.icone}</span>
-                <div style={{ fontSize: '13px', fontWeight: 700 }}>{Math.round(d.temp_max)}°</div>
-                <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>{Math.round(d.temp_min)}°</div>
-                <div style={{ fontSize: '11px', color: 'var(--hp-info)', marginTop: '4px' }}>{d.chance_chuva}% chuva</div>
-              </div>
-            );
-          })}
-        </div>
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '18px', paddingTop: '12px', borderTop: '1px solid var(--hp-border)', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--hp-text)' }}>
+              Previsão de 7 dias (Open-Meteo)
+            </div>
+            <div style={{ display: 'flex', gap: '14px', fontSize: '11px', color: 'var(--hp-text-2)' }}>
+              <span>Média Regional: <b>{mediaMinRegional}°C a {mediaMaxRegional}°C</b></span>
+              <span>Chuva Acumulada Prevista: <b>{acumuladoChuva} mm</b></span>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(72px, 1fr))', gap: '8px', marginTop: '10px', overflowX: 'auto' }}>
+            {clima.dias.map((d) => {
+              const t = descreverTempo(d.codigo_tempo);
+              const dia = DIAS[new Date(`${d.data}T12:00:00`).getDay()];
+              return (
+                <div key={d.data} title={t.texto} style={{ background: 'var(--hp-surface-2)', borderRadius: '12px', padding: '10px 6px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600 }}>{dia}</div>
+                  <span style={{ ...icone, fontSize: '22px', color: 'var(--hp-text-2)', display: 'block', margin: '6px 0' }}>{t.icone}</span>
+                  <div style={{ fontSize: '13px', fontWeight: 700 }}>{Math.round(d.temp_max)}°</div>
+                  <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>{Math.round(d.temp_min)}°</div>
+                  <div style={{ fontSize: '11px', color: 'var(--hp-info)', marginTop: '4px' }}>{d.chance_chuva}% chuva</div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       ) : null}
     </div>
   );

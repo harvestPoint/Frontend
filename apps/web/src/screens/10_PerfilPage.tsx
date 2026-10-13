@@ -208,23 +208,31 @@ export default function PerfilPage() {
 
           {/* Fazendas */}
           <div style={cartao}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
               <div style={{ ...secao, marginBottom: 0 }}>{isTecnico ? 'PROPRIEDADES ACOMPANHADAS' : 'MINHAS FAZENDAS'}</div>
-              {isTecnico ? (
-                <button type="button" style={botao} onClick={() => navigate('/cadastros/propriedades')}>
-                  Gerenciar em Cadastros
-                </button>
-              ) : !formAberto ? (
-                <button type="button" style={botaoPrincipal} onClick={() => { setFormAberto(true); setMsgFazenda(''); }}>
-                  <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: 1 }}>add</span>
-                  Adicionar fazenda
-                </button>
+              {!formAberto ? (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {isTecnico && (
+                    <button type="button" style={botao} onClick={() => navigate('/cadastros/propriedades')}>
+                      Gerenciar em Cadastros
+                    </button>
+                  )}
+                  <button type="button" style={botaoPrincipal} onClick={() => { setFormAberto(true); setMsgFazenda(''); }}>
+                    <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: 1 }}>add</span>
+                    Adicionar propriedade
+                  </button>
+                </div>
               ) : null}
             </div>
 
             {propriedades.length === 0 ? (
-              <div style={{ fontSize: '13px', color: 'var(--hp-text-2)', marginTop: '12px' }}>
-                {isTecnico ? 'Nenhuma propriedade cadastrada no sistema.' : 'Você ainda não cadastrou sua fazenda. Clique em "Adicionar fazenda".'}
+              <div style={{ fontSize: '13px', color: 'var(--hp-text-2)', marginTop: '14px', background: 'var(--hp-surface-2)', padding: '14px', borderRadius: '12px' }}>
+                <div style={{ fontWeight: 600, color: 'var(--hp-text)', marginBottom: '4px' }}>
+                  Nenhuma propriedade vinculada à sua conta ainda.
+                </div>
+                <div>
+                  Se você optou por deixar a fazenda em branco no cadastro, clique em <b>"Adicionar propriedade"</b> acima e informe os 4 dados essenciais: <b>Nome, Município, Área e Coordenadas (Latitude e Longitude)</b>.
+                </div>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>

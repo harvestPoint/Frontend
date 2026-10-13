@@ -174,6 +174,23 @@ export default function JanelaColheitaPage() {
                   <strong style={{ color: 'var(--hp-accent)', fontSize: '13px' }}>{rec.grau_confianca?.toFixed(1)}%</strong>
                 </div>
 
+                {rec.modelo_ml && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '10px 12px', background: 'var(--hp-surface-2)', borderRadius: '10px', fontSize: '12px', borderLeft: '3px solid var(--hp-accent)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--hp-text-2)' }}>Qualidade Estimada:</span>
+                      <strong style={{ color: 'var(--hp-text)' }}>{rec.modelo_ml.qualidade_safra}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--hp-text-2)' }}>Brix Estimado:</span>
+                      <strong style={{ color: 'var(--hp-accent)' }}>{rec.modelo_ml.grau_brix_estimado} °Bx</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--hp-text-2)' }}>Risco Fitossanitário:</span>
+                      <strong style={{ color: rec.modelo_ml.risco_fitossanitario.includes('Alto') ? 'var(--hp-critico)' : 'var(--hp-text)' }}>{rec.modelo_ml.risco_fitossanitario}</strong>
+                    </div>
+                  </div>
+                )}
+
                 <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>
                   Ciclo: dia {decorridos} de {ciclo} dias {diasRestantes > 0 ? `· faltam ~${diasRestantes} dias` : '· ciclo concluído'}
                 </div>

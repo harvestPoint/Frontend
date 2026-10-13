@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { listSensores, createSensor, deleteSensor, listLotes, type Sensor, type Lote } from '@/lib/api';
+import { listSensores, createSensor, deleteSensor, listLotes, createLeitura, type Sensor, type Lote } from '@/lib/api';
 
 export default function SensoresPage() {
   const [sensores, setSensores] = useState<Sensor[]>([]);
@@ -11,6 +11,9 @@ export default function SensoresPage() {
 
   // Form state
   const [showForm, setShowForm] = useState(false);
+  const [showGuiaEsp32, setShowGuiaEsp32] = useState(false);
+  const [testandoEsp32, setTestandoEsp32] = useState(false);
+  const [testeMsg, setTesteMsg] = useState('');
   const [saving, setSaving] = useState(false);
   const [codigoInput, setCodigoInput] = useState('');
   const [loteIdInput, setLoteIdInput] = useState<number | ''>('');
@@ -80,6 +83,27 @@ export default function SensoresPage() {
     }
   }
 
+  async function testarLeituraEsp32() {
+    try {
+      setTestandoEsp32(true);
+      setTesteMsg('');
+      const cod = codigoInput.trim() || (sensores[0]?.codigo) || 'ESP32-01';
+      const tempRand = +(26.0 + Math.random() * 8.0).toFixed(1);
+      const umidRand = +(50.0 + Math.random() * 25.0).toFixed(1);
+      const res = await createLeitura({
+        codigo: cod,
+        temperatura: tempRand,
+        umidade: umidRand,
+      });
+      setTesteMsg(`✓ Telemetria registrada: Sensor ${res.sensor_codigo || cod} -> ${tempRand} °C, ${umidRand} %`);
+      await loadData();
+    } catch {
+      setTesteMsg('Falha ao enviar telemetria.');
+    } finally {
+      setTestandoEsp32(false);
+    }
+  }
+
   const filteredSensores = sensores.filter((s) => {
     const matchBusca = (s.codigo || '').toLowerCase().includes(busca.toLowerCase()) ||
       (s.lote_nome || '').toLowerCase().includes(busca.toLowerCase());
@@ -102,17 +126,80 @@ export default function SensoresPage() {
             Dispositivos ESP-32 de telemetria instalados em campo · {sensores.length} sensores registrados
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowForm(!showForm)}
-          style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
-        >
-          <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>
-            {showForm ? 'close' : 'add'}
-          </span>
-          {showForm ? 'Cancelar' : 'Novo sensor'}
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            type="button"
+            onClick={() => setShowGuiaEsp32(!showGuiaEsp32)}
+            style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-surface)', border: '1px solid var(--hp-input-border)', color: 'var(--hp-text)', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+          >
+            <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-accent)' }}>
+              sensors
+            </span>
+            {showGuiaEsp32 ? 'Fechar Guia ESP-32' : 'Integração ESP-32'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowForm(!showForm)}
+            style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
+          >
+            <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>
+              {showForm ? 'close' : 'add'}
+            </span>
+            {showForm ? 'Cancelar' : 'Novo sensor'}
+          </button>
+        </div>
       </div>
+
+      {showGuiaEsp32 && (
+        <div style={{ background: 'var(--hp-surface)', border: '1.5px solid var(--hp-accent)', borderRadius: '16px', padding: '20px', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontWeight: 700, fontSize: '16px', color: 'var(--hp-text)' }}>
+              Guia de Integração e Ingestão ESP-32 + DHT22
+            </div>
+            <button
+              type="button"
+              disabled={testandoEsp32}
+              onClick={testarLeituraEsp32}
+              style={{ height: '36px', padding: '0 14px', background: 'var(--hp-accent)', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '16px' }}>sensors</span>
+              {testandoEsp32 ? 'Enviando telemetria...' : 'Simular Leitura ESP-32 Agora'}
+            </button>
+          </div>
+          {testeMsg && (
+            <div style={{ padding: '8px 12px', background: 'var(--hp-accent-soft)', color: 'var(--hp-accent)', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
+              {testeMsg}
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px', fontSize: '13px' }}>
+            <div style={{ background: 'var(--hp-surface-2)', padding: '12px', borderRadius: '10px' }}>
+              <strong style={{ color: 'var(--hp-text)' }}>Endpoint de Ingestão:</strong>
+              <div style={{ fontFamily: 'monospace', fontSize: '12px', marginTop: '4px', color: 'var(--hp-accent)' }}>
+                POST /api/sensores/leitura
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--hp-text-2)', marginTop: '4px' }}>
+                Livre de autenticação para o firmware enviar direto pelo ESP32.
+              </div>
+            </div>
+            <div style={{ background: 'var(--hp-surface-2)', padding: '12px', borderRadius: '10px' }}>
+              <strong style={{ color: 'var(--hp-text)' }}>Payload JSON esperado:</strong>
+              <pre style={{ fontFamily: 'monospace', fontSize: '11px', margin: '4px 0 0', color: 'var(--hp-text)' }}>
+{`{
+  "codigo": "ESP32-01",
+  "temperatura": 28.5,
+  "umidade": 65.0
+}`}
+              </pre>
+            </div>
+            <div style={{ background: 'var(--hp-surface-2)', padding: '12px', borderRadius: '10px' }}>
+              <strong style={{ color: 'var(--hp-text)' }}>Código C++ do Firmware:</strong>
+              <div style={{ fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px' }}>
+                Disponível em <code style={{ color: 'var(--hp-accent)' }}>firmware/esp32_harvestpoint.ino</code> com suporte a reconexão WiFi e HTTPClient.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleCreate} style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-accent)', borderRadius: '16px', padding: '20px', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>

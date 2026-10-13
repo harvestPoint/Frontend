@@ -4,6 +4,8 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { iniciais, listSensores, type Sensor } from '@/lib/api';
 
+import Logo from '@/components/Logo';
+
 interface NavItemProps {
   to: string;
   icon: string;
@@ -92,13 +94,10 @@ export default function Sidebar({ alertasPendentes = 0 }: SidebarProps) {
   return (
     <div style={{ width: '264px', flex: '0 0 264px', background: 'var(--hp-surface)', borderRight: '1px solid var(--hp-border)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: '72px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'var(--hp-accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '20px', lineHeight: 1, color: 'var(--hp-accent)' }}>eco</span>
-          </div>
-          <div>
-            <div style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '15px', fontWeight: 800, letterSpacing: '-.01em' }}>HarvestPoint</div>
-            <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>{user?.propriedade || 'Vale do São Francisco'}</div>
+        <div>
+          <Logo size={34} />
+          <div style={{ fontSize: '11px', color: 'var(--hp-text-2)', marginTop: '2px', paddingLeft: '44px' }}>
+            {user?.propriedade || 'Vale do São Francisco'}
           </div>
         </div>
       </div>

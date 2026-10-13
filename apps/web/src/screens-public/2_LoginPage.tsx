@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { roleCardStyle } from '@/lib/uiHelpers';
 import { login as loginRequest, readApiError } from '@/lib/api';
+import Logo from '@/components/Logo';
 
 export default function LoginPage() {
 
@@ -54,19 +55,7 @@ export default function LoginPage() {
       <div style={{position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '0 56px'}}>
         <div style={{height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
           <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-            <div style={{width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-              <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '20px', lineHeight: '1', color: '#FFFFFF'}}>
-                eco
-              </span>
-            </div>
-            <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '19px', fontWeight: '800', letterSpacing: '-.01em'}}>
-              <span style={{color: '#FFFFFF'}}>
-                Harvest
-              </span>
-              <span style={{color: '#B9D0BC'}}>
-                Point
-              </span>
-            </div>
+            <Logo size={36} textColor="#FFFFFF" />
           </div>
           <div style={{display: 'flex', alignItems: 'center', gap: '24px'}}>
             <div style={{display: 'flex', alignItems: 'center', gap: '20px'}}>
@@ -118,9 +107,7 @@ export default function LoginPage() {
           </div>
           <div style={{width: '440px', padding: '32px', borderRadius: '22px', background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,.5)', boxShadow: '0 20px 48px rgba(22,21,15,.18)'}}>
             <div style={{width: '48px', height: '48px', borderRadius: '16px', background: '#E7EFE7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '40ms'}}>
-              <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '24px', lineHeight: '1', color: '#6B8F71'}}>
-                eco
-              </span>
+              <Logo size={32} showText={false} />
             </div>
             <div style={{fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '20px', lineHeight: '28px', fontWeight: '700', color: '#1F211D', textAlign: 'center', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '80ms'}}>
               Bem-vindo de volta

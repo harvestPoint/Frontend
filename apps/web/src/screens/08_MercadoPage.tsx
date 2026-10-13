@@ -11,6 +11,7 @@ const brl = (n?: number | null) => (n == null ? '--' : n.toLocaleString('pt-BR',
 export default function MercadoPage() {
   const [precos, setPrecos] = useState<PrecoMercado[]>([]);
   const [dolar, setDolar] = useState<CotacaoDolar | null>(null);
+  const [euro, setEuro] = useState<CotacaoDolar | null>(null);
   const [exportacao, setExportacao] = useState<PrecoExportacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,6 +24,7 @@ export default function MercadoPage() {
         const res = await listMercado();
         setPrecos(res.data ?? []);
         setDolar(res.dolar ?? null);
+        setEuro(res.euro ?? null);
         setExportacao(res.exportacao ?? []);
       } catch (err: unknown) {
         const e = err as { message?: string };
@@ -60,14 +62,29 @@ export default function MercadoPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
         {/* Dólar PTAX */}
         <div style={cartao}>
-          <div style={rotulo}>DÓLAR PTAX · BANCO CENTRAL</div>
+          <div style={rotulo}>DÓLAR PTAX (USD) · BANCO CENTRAL</div>
           {dolar?.erro ? (
             <div style={{ fontSize: '13px', color: 'var(--hp-critico)', marginTop: '8px' }}>{dolar.erro}</div>
           ) : (
             <>
               <div style={valor}>{brl(dolar?.venda)}</div>
               <div style={{ fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px' }}>
-                venda · cotação de {formatDateTime(dolar?.data_hora)}
+                venda · cotação oficial {dolar?.data_hora ? `(${formatDateTime(dolar?.data_hora)})` : ''}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Euro PTAX */}
+        <div style={cartao}>
+          <div style={rotulo}>EURO PTAX (EUR) · BANCO CENTRAL</div>
+          {euro?.erro ? (
+            <div style={{ fontSize: '13px', color: 'var(--hp-critico)', marginTop: '8px' }}>{euro.erro}</div>
+          ) : (
+            <>
+              <div style={valor}>{brl(euro?.venda)}</div>
+              <div style={{ fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px' }}>
+                venda · cotação oficial {euro?.data_hora ? `(${formatDateTime(euro?.data_hora)})` : ''}
               </div>
             </>
           )}
