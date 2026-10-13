@@ -84,7 +84,7 @@ export default function LoginPage() {
               </div>
             </div>
             <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '44px', lineHeight: '48px', fontWeight: '800', letterSpacing: '-.02em', color: '#FFFFFF', textWrap: 'pretty', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '90ms'}}>
-              Tecnologia e inteligência para uma colheita no 
+              Tecnologia e inteligência para uma colheita no{' '}
               <span style={{color: '#B9D0BC', borderBottom: '3px solid #B9D0BC', borderRadius: '3px', paddingBottom: '3px'}}>
                 ponto certo
               </span>
@@ -211,7 +211,7 @@ export default function LoginPage() {
               </span>
             </div>
             <div style={{textAlign: 'center', fontSize: '12px', color: '#6B6D63', marginTop: '14px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '380ms'}}>
-              Não tem uma conta? 
+              Não tem uma conta?{' '}
               <span style={{color: '#6B8F71', fontWeight: '600', cursor: 'pointer'}} onClick={goCadastro}>
                 Criar conta gratuitamente
               </span>
