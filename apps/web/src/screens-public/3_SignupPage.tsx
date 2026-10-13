@@ -6,10 +6,45 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { roleCardStyle } from '@/lib/uiHelpers';
 import { signup, readApiError } from '@/lib/api';
+import {
+  validarConta,
+  validarFazenda,
+  fazendaParaApi,
+  errosDoBackend,
+  pegarLocalizacao,
+  fazendaVazia,
+  type Erros,
+  type FazendaForm,
+} from '@/lib/validacao';
+
+// Estilos repetidos dos campos (a tela de cadastro é sempre clara, por isso cores fixas)
+const labelStyle: React.CSSProperties = { fontSize: '13px', lineHeight: '16px', fontWeight: 600, color: '#1F211D', margin: '14px 0 6px' };
+const inputStyle: React.CSSProperties = { width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: '#1F211D' };
+const erroStyle: React.CSSProperties = { fontSize: '12px', color: '#B42318', marginTop: '4px' };
+function caixaStyle(comErro: boolean): React.CSSProperties {
+  return { height: '48px', borderRadius: '12px', background: '#FFFFFF', border: `1px solid ${comErro ? '#B42318' : '#D6D4CB'}`, display: 'flex', alignItems: 'center', gap: '10px', padding: '0 14px' };
+}
+
+/** Um campo do formulário: rótulo, caixa e a mensagem de erro embaixo (se houver). */
+function Campo(props: { label: string; erro?: string; icone?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div style={labelStyle}>{props.label}</div>
+      <div style={caixaStyle(Boolean(props.erro))}>
+        {props.icone ? (
+          <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: '#8B8D82' }}>{props.icone}</span>
+        ) : null}
+        {props.children}
+      </div>
+      {props.erro ? <div style={erroStyle}>{props.erro}</div> : null}
+    </div>
+  );
+}
 
 export default function SignupPage() {
 
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [role, setRole] = useState<'proprietario' | 'tecnico'>('proprietario');
   const selectRoleProprietario = () => setRole('proprietario');
   const selectRoleTecnico = () => setRole('tecnico');
@@ -19,35 +54,85 @@ export default function SignupPage() {
   const roleCheckTecnico = role === 'tecnico' ? 1 : 0;
   const roleIconColorProprietario = role === 'proprietario' ? '#6B8F71' : '#8B8D82';
   const roleIconColorTecnico = role === 'tecnico' ? '#6B8F71' : '#8B8D82';
-  const [cad, setCad] = useState({ nome: '', email: '', senha: '', propriedade: '' });
-  const onNomeChange = (e: React.ChangeEvent<HTMLInputElement>) => setCad((c) => ({ ...c, nome: e.target.value }));
-  const onCadEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => setCad((c) => ({ ...c, email: e.target.value }));
-  const onCadSenhaChange = (e: React.ChangeEvent<HTMLInputElement>) => setCad((c) => ({ ...c, senha: e.target.value }));
-  const onCadPropriedadeChange = (e: React.ChangeEvent<HTMLInputElement>) => setCad((c) => ({ ...c, propriedade: e.target.value }));
-  const goLogin = () => navigate('/login');
-  const { login } = useAuth();
-  const [erro, setErro] = useState('');
+
+  const [cad, setCad] = useState({ nome: '', email: '', senha: '' });
+  // Fazenda: só o proprietário vê. Ele escolhe cadastrar agora ou deixar para depois (no Perfil).
+  const [fazendaAgora, setFazendaAgora] = useState(true);
+  const [fazenda, setFazenda] = useState<FazendaForm>(fazendaVazia);
+  const [erros, setErros] = useState<Erros>({});
+  const [erroGeral, setErroGeral] = useState('');
+  const [errosLista, setErrosLista] = useState<string[]>([]); // lista "campo: problema" para o quadro vermelho
   const [enviando, setEnviando] = useState(false);
+  const [localizando, setLocalizando] = useState(false);
+
+  // Altera um campo da conta e apaga o erro daquele campo
+  const onCad = (campo: 'nome' | 'email' | 'senha') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCad((c) => ({ ...c, [campo]: e.target.value }));
+    setErros((er) => ({ ...er, [campo]: '' }));
+  };
+  // Mesma ideia para os campos da fazenda
+  const onFazenda = (campo: keyof FazendaForm, chaveErro: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFazenda((f) => ({ ...f, [campo]: e.target.value }));
+    setErros((er) => ({ ...er, [chaveErro]: '' }));
+  };
+
+  const usarMinhaLocalizacao = async () => {
+    setLocalizando(true);
+    try {
+      const pos = await pegarLocalizacao();
+      setFazenda((f) => ({ ...f, ...pos }));
+      setErros((er) => ({ ...er, fazenda_latitude: '', fazenda_longitude: '' }));
+    } catch (err) {
+      setErroGeral((err as Error).message);
+    } finally {
+      setLocalizando(false);
+    }
+  };
+
+  const goLogin = () => navigate('/login');
+  const vaiCadastrarFazenda = role === 'proprietario' && fazendaAgora;
+
   const goDashboard = async () => {
-    setErro('');
+    setErroGeral('');
+    setErrosLista([]);
+    // 1) valida no próprio navegador antes de chamar a API
+    const novosErros: Erros = {
+      ...validarConta(cad),
+      ...(vaiCadastrarFazenda ? validarFazenda(fazenda) : {}),
+    };
+    setErros(novosErros);
+    if (Object.keys(novosErros).length > 0) {
+      setErroGeral('Não foi possível criar a conta. Corrija os campos abaixo:');
+      setErrosLista(Object.values(novosErros));
+      return;
+    }
+
+    // 2) envia; técnico nunca manda fazenda
     setEnviando(true);
     try {
       const user = await signup({
-        nome: cad.nome,
-        email: cad.email,
+        nome: cad.nome.trim(),
+        email: cad.email.trim(),
         senha: cad.senha,
         role,
-        propriedade: cad.propriedade,
+        fazenda: vaiCadastrarFazenda ? fazendaParaApi(fazenda) : undefined,
       });
       login(user);
       navigate('/dashboard');
     } catch (err) {
+      // 3) se o backend recusar, mostra o erro embaixo do campo certo
       const apiErr = readApiError(err);
-      setErro(apiErr.message || 'Não foi possível criar a conta');
+      const doBackend = errosDoBackend(apiErr.fields);
+      setErros(doBackend);
+      setErroGeral(apiErr.message || 'Não foi possível criar a conta');
+      // lista o que o servidor reclamou (campos ou detalhes), para o usuário saber o que arrumar
+      const lista = Object.keys(doBackend).length > 0 ? Object.values(doBackend) : (apiErr.details ?? []);
+      setErrosLista(lista);
     } finally {
       setEnviando(false);
     }
   };
+
 
   return (
     <>
@@ -102,33 +187,21 @@ export default function SignupPage() {
             <div style={{fontSize: '12px', lineHeight: '16px', color: '#6B6D63', textAlign: 'center', marginTop: '4px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '110ms'}}>
               Acompanhe clima, lotes e operações do Vale.
             </div>
-            <div style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600', color: '#1F211D', margin: '22px 0 6px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '150ms'}}>
-              Nome completo
-            </div>
-            <div style={{height: '48px', borderRadius: '12px', background: '#FFFFFF', border: '1px solid #D6D4CB', display: 'flex', alignItems: 'center', padding: '0 14px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '150ms'}}>
-              <input type="text" placeholder="Seu nome" value={cad.nome} onChange={onNomeChange} style={{width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: '#1F211D'}} />
-            </div>
-            <div style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600', color: '#1F211D', margin: '14px 0 6px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '190ms'}}>
-              E-mail profissional
-            </div>
-            <div style={{height: '48px', borderRadius: '12px', background: '#FFFFFF', border: '1px solid #D6D4CB', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 14px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '190ms'}}>
-              <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: '#8B8D82'}}>
-                mail
-              </span>
-              <input type="email" placeholder="seu@email.com" value={cad.email} onChange={onCadEmailChange} style={{flex: '1', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: '#1F211D'}} />
-            </div>
-            <div style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600', color: '#1F211D', margin: '14px 0 6px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '230ms'}}>
-              Senha
-            </div>
-            <div style={{height: '48px', borderRadius: '12px', background: '#FFFFFF', border: '1px solid #D6D4CB', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 14px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '230ms'}}>
-              <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: '#8B8D82'}}>
-                lock
-              </span>
-              <input type="password" placeholder="••••••••" value={cad.senha} onChange={onCadSenhaChange} style={{flex: '1', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', letterSpacing: '.04em', color: '#1F211D'}} />
+            <div style={{opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '150ms'}}>
+              <Campo label="Nome completo" erro={erros.nome}>
+                <input type="text" placeholder="Seu nome" value={cad.nome} onChange={onCad('nome')} style={inputStyle} />
+              </Campo>
+              <Campo label="E-mail profissional" erro={erros.email} icone="mail">
+                <input type="email" placeholder="seu@email.com" value={cad.email} onChange={onCad('email')} style={inputStyle} />
+              </Campo>
+              <Campo label="Senha" erro={erros.senha} icone="lock">
+                <input type="password" placeholder="mínimo 6 caracteres" value={cad.senha} onChange={onCad('senha')} style={{ ...inputStyle, letterSpacing: '.04em' }} />
+              </Campo>
             </div>
             <div style={{fontSize: '11px', lineHeight: '14px', fontWeight: '700', letterSpacing: '.08em', color: '#8B8D82', margin: '22px 0 10px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '270ms'}}>
               QUAL SUA FUNÇÃO NA FAZENDA
             </div>
+
             <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '270ms'}}>
               <div style={roleCardProprietario} onClick={selectRoleProprietario}>
                 <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '20px', lineHeight: '1', color: roleIconColorProprietario}}>
@@ -167,15 +240,64 @@ export default function SignupPage() {
                 )}
               </div>
             </div>
-            <div style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600', color: '#1F211D', margin: '16px 0 6px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '310ms'}}>
-              Nome da propriedade
-            </div>
-            <div style={{height: '48px', borderRadius: '12px', background: '#FFFFFF', border: '1px solid #D6D4CB', display: 'flex', alignItems: 'center', padding: '0 14px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '310ms'}}>
-              <input type="text" placeholder="Ex.: Fazenda Boa Vista" value={cad.propriedade} onChange={onCadPropriedadeChange} style={{width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: '#1F211D'}} />
-            </div>
-            {erro ? (
-              <div style={{fontSize: '12px', color: '#B42318', marginTop: '12px'}}>
-                {erro}
+            {role === 'tecnico' ? (
+              <div style={{fontSize: '12px', lineHeight: '18px', color: '#6B6D63', background: '#F4F3EE', borderRadius: '12px', padding: '12px 14px', marginTop: '16px'}}>
+                Técnicos acompanham as fazendas dos produtores, então não precisam cadastrar propriedade.
+              </div>
+            ) : (
+              <div style={{marginTop: '16px'}}>
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px'}}>
+                  <div style={{fontSize: '13px', fontWeight: 600, color: '#1F211D'}}>Sua fazenda</div>
+                  <div style={{display: 'flex', gap: '4px', background: '#F4F3EE', borderRadius: '10px', padding: '3px'}}>
+                    <button type="button" onClick={() => setFazendaAgora(true)} style={{border: 'none', borderRadius: '8px', padding: '6px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: fazendaAgora ? '#FFFFFF' : 'transparent', color: fazendaAgora ? '#1F211D' : '#6B6D63'}}>
+                      Cadastrar agora
+                    </button>
+                    <button type="button" onClick={() => setFazendaAgora(false)} style={{border: 'none', borderRadius: '8px', padding: '6px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: !fazendaAgora ? '#FFFFFF' : 'transparent', color: !fazendaAgora ? '#1F211D' : '#6B6D63'}}>
+                      Deixar para depois
+                    </button>
+                  </div>
+                </div>
+                {fazendaAgora ? (
+                  <>
+                    <Campo label="Nome da fazenda" erro={erros.fazenda_nome}>
+                      <input type="text" placeholder="Ex.: Fazenda Boa Vista" value={fazenda.nome} onChange={onFazenda('nome', 'fazenda_nome')} style={inputStyle} />
+                    </Campo>
+                    <div style={{display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '10px'}}>
+                      <Campo label="Município" erro={erros.fazenda_municipio}>
+                        <input type="text" placeholder="Petrolina - PE" value={fazenda.municipio} onChange={onFazenda('municipio', 'fazenda_municipio')} style={inputStyle} />
+                      </Campo>
+                      <Campo label="Área (ha)" erro={erros.fazenda_area_total}>
+                        <input type="text" inputMode="decimal" placeholder="120" value={fazenda.area} onChange={onFazenda('area', 'fazenda_area_total')} style={inputStyle} />
+                      </Campo>
+                    </div>
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
+                      <Campo label="Latitude" erro={erros.fazenda_latitude}>
+                        <input type="text" inputMode="decimal" placeholder="-9.3891" value={fazenda.latitude} onChange={onFazenda('latitude', 'fazenda_latitude')} style={inputStyle} />
+                      </Campo>
+                      <Campo label="Longitude" erro={erros.fazenda_longitude}>
+                        <input type="text" inputMode="decimal" placeholder="-40.5027" value={fazenda.longitude} onChange={onFazenda('longitude', 'fazenda_longitude')} style={inputStyle} />
+                      </Campo>
+                    </div>
+                    <button type="button" onClick={usarMinhaLocalizacao} disabled={localizando} style={{marginTop: '10px', border: 'none', background: 'transparent', color: '#6B8F71', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px'}}>
+                      <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '16px', lineHeight: '1'}}>my_location</span>
+                      {localizando ? 'Buscando localização...' : 'Usar minha localização atual'}
+                    </button>
+                  </>
+                ) : (
+                  <div style={{fontSize: '12px', lineHeight: '18px', color: '#6B6D63', marginTop: '8px'}}>
+                    Tudo bem! Depois é só ir em Perfil → Minhas fazendas e informar nome, município, área e coordenadas.
+                  </div>
+                )}
+              </div>
+            )}
+            {erroGeral ? (
+              <div role="alert" style={{fontSize: '13px', color: '#B42318', marginTop: '12px', background: '#FEF3F2', border: '1px solid #FDA29B', borderRadius: '10px', padding: '10px 12px'}}>
+                <div style={{fontWeight: 600}}>{erroGeral}</div>
+                {errosLista.length > 0 ? (
+                  <ul style={{margin: '6px 0 0', paddingLeft: '18px'}}>
+                    {errosLista.map((e) => <li key={e}>{e}</li>)}
+                  </ul>
+                ) : null}
               </div>
             ) : null}
             <div style={{height: '52px', marginTop: '20px', borderRadius: '12px', background: '#6B8F71', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '15px', fontWeight: '600', cursor: enviando ? 'default' : 'pointer', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '350ms'}} onClick={enviando ? undefined : goDashboard}>

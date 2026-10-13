@@ -163,10 +163,15 @@ export interface DashboardData {
   previsao_clima: Clima[];
 }
 
+/** Alias usado pelo Dashboard (mesmo formato de DashboardData). */
+export type DashboardResponse = DashboardData;
+
 export interface ApiError {
   error?: string;
   message?: string;
   details?: string[];
+  /** Erros separados por campo, ex.: { email: ['Este e-mail já está cadastrado'] } */
+  fields?: Record<string, string[]>;
 }
 
 export function getToken(): string | null {
@@ -203,13 +208,44 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export function readApiError(err: unknown): ApiError {
-  const axiosErr = err as AxiosError<ApiError>;
-  return axiosErr.response?.data ?? { message: 'Falha ao falar com o servidor' };
+/**
+ * Transforma qualquer erro do axios em { message, details, fields, status }.
+ * Nunca devolve mensagem vazia: se o servidor não explicou, descrevemos o que aconteceu.
+ */
+export function readApiError(err: unknown): ApiError & { status?: number } {
+  const axiosErr = err as AxiosError<ApiError & { exception?: string }>;
+  const resp = axiosErr.response;
+
+  // Sem resposta = o backend nem foi alcançado
+  if (!resp) {
+    return {
+      message: 'Não consegui falar com o servidor. Confira se o backend (Rails) está rodando na porta 3333.',
+    };
+  }
+
+  const body = typeof resp.data === 'object' && resp.data ? resp.data : ({} as ApiError & { exception?: string });
+  if (body.message) return { ...body, status: resp.status };
+
+  // Resposta sem "message" (ex.: erro 500 do Rails): monta uma explicação útil
+  const detalhe = body.exception || body.error || '';
+  const message =
+    resp.status >= 500
+      ? `Erro interno do servidor (${resp.status})${detalhe ? `: ${detalhe}` : ''}. Veja o terminal do Rails para o motivo.`
+      : `O servidor recusou a requisição (${resp.status})${detalhe ? `: ${detalhe}` : ''}.`;
+  return { ...body, message, status: resp.status };
 }
 
 function unwrap<T>(payload: { data: T }): T {
   return payload.data;
+}
+
+/** Dados da fazenda no cadastro (só para proprietário; pode ficar para depois). */
+export interface FazendaInput {
+  nome: string;
+  municipio: string;
+  area_total: number;
+  latitude: number;
+  longitude: number;
 }
 
 export async function signup(payload: {
@@ -217,7 +253,7 @@ export async function signup(payload: {
   email: string;
   senha: string;
   role: UserRole;
-  propriedade: string;
+  fazenda?: FazendaInput;
   cpf_cnpj?: string;
   telefone?: string;
 }) {
@@ -298,7 +334,7 @@ export async function resolverAlerta(id: number) {
 
 export async function listLeituras(params?: { sensor_id?: number; lote_id?: number; limit?: number }) {
   const { data } = await api.get<{ data: Leitura[]; total: number }>('/leituras', { params });
-  return data;
+  return data.data;
 }
 
 export async function createLeitura(payload: { codigo?: string; sensor_id?: number; temperatura: number; umidade: number }) {
@@ -375,7 +411,7 @@ export async function deleteCultura(id: number) {
 
 export async function listRecomendacoes(params?: { lote_id?: number; status?: string }) {
   const { data } = await api.get<{ data: Recomendacao[]; pendentes: number }>('/recomendacoes', { params });
-  return data;
+  return data.data;
 }
 
 export async function gerarRecomendacoes() {
@@ -393,9 +429,90 @@ export async function rejeitarRecomendacao(id: number) {
   return unwrap(data);
 }
 
+/** Cotação do dólar (PTAX) vinda do Banco Central pelo backend. */
+export interface CotacaoDolar {
+  compra?: number;
+  venda?: number;
+  data_hora?: string;
+  historico?: { data: string; venda: number }[];
+  fonte?: 'api' | 'cache';
+  atualizado_em?: string;
+  erro?: string;
+}
+
+/** Preço médio de exportação (Comex Stat) por produto. */
+export interface PrecoExportacao {
+  produto: string;
+  preco_usd_kg?: number | null;
+  preco_brl_kg?: number | null;
+  total_kg_12m?: number;
+  fonte?: 'api' | 'cache';
+  atualizado_em?: string;
+  erro?: string;
+}
+
+export interface MercadoResponse {
+  data: PrecoMercado[];
+  resumo_culturas: PrecoMercado[];
+  dolar: CotacaoDolar;
+  exportacao: PrecoExportacao[];
+}
+
 export async function listMercado() {
-  const { data } = await api.get<{ data: PrecoMercado[]; resumo_culturas: PrecoMercado[] }>('/mercado');
+  const { data } = await api.get<MercadoResponse>('/mercado');
   return data;
+}
+
+/** Exportação de um produto (manga ou uva) — dados oficiais do Comex Stat. */
+export interface ExportacaoProduto {
+  produto: string;
+  ncm?: string;
+  meses?: { mes: string; kg: number; fob_usd: number }[];
+  media_por_mes?: { mes: number; nome: string; kg_medio: number }[];
+  meses_pico?: number[];
+  top_destinos?: { pais: string; kg: number; fob_usd: number; participacao: number }[];
+  total_kg_12m?: number;
+  total_fob_usd_12m?: number;
+  preco_medio_usd_kg?: number | null;
+  fonte?: 'api' | 'cache';
+  atualizado_em?: string;
+  erro?: string;
+}
+
+/** Janela de colheita de um lote cruzada com os meses de maior exportação. */
+export interface JanelaExportacao extends Recomendacao {
+  produto_exportacao?: string | null;
+  meses_colheita: number[];
+  em_alta_demanda: boolean;
+}
+
+export async function fetchExportacao() {
+  const { data } = await api.get<{ data: ExportacaoProduto[]; minhas_janelas: JanelaExportacao[] }>('/exportacao');
+  return data;
+}
+
+export interface FatiaLogistica {
+  nome: string;
+  kg: number;
+  fob_usd: number;
+  participacao: number;
+}
+
+export interface LogisticaProduto {
+  produto: string;
+  ncm?: string;
+  periodo?: { from: string; to: string };
+  total_kg?: number;
+  modais?: FatiaLogistica[];
+  saidas?: FatiaLogistica[];
+  fonte?: 'api' | 'cache';
+  atualizado_em?: string;
+  erro?: string;
+}
+
+export async function fetchLogistica() {
+  const { data } = await api.get<{ data: LogisticaProduto[] }>('/logistica');
+  return data.data;
 }
 
 export async function createCotacao(payload: { cultura_id: number; preco_medio: number; moeda?: string; data_cotacao?: string }) {

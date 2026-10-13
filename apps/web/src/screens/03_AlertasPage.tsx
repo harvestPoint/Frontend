@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { listAlertas, resolverAlerta, type Alerta } from '@/lib/api';
 
 function getSeveridade(tipo: string): { label: string; color: string } {

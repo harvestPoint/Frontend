@@ -1,8 +1,17 @@
-import { useState, useEffect } from 'react';
-import { listMercado, formatDate, type PrecoMercado } from '@/lib/api';
+// Mercado & Preços: dólar oficial (Banco Central), preço médio de exportação
+// (Comex Stat) e as cotações registradas no próprio sistema.
+import { useState, useEffect, type CSSProperties } from 'react';
+import { listMercado, formatDate, formatDateTime, type PrecoMercado, type CotacaoDolar, type PrecoExportacao } from '@/lib/api';
+
+const cartao: CSSProperties = { background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px' };
+const rotulo: CSSProperties = { fontSize: '11px', fontWeight: 700, letterSpacing: '.08em', color: 'var(--hp-text-3)' };
+const valor: CSSProperties = { fontSize: '28px', lineHeight: '34px', fontWeight: 700, marginTop: '8px', fontVariantNumeric: 'tabular-nums' };
+const brl = (n?: number | null) => (n == null ? '--' : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
 
 export default function MercadoPage() {
   const [precos, setPrecos] = useState<PrecoMercado[]>([]);
+  const [dolar, setDolar] = useState<CotacaoDolar | null>(null);
+  const [exportacao, setExportacao] = useState<PrecoExportacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -12,8 +21,9 @@ export default function MercadoPage() {
         setLoading(true);
         setError('');
         const res = await listMercado();
-        const list = Array.isArray(res) ? res : res.data ?? [];
-        setPrecos(list);
+        setPrecos(res.data ?? []);
+        setDolar(res.dolar ?? null);
+        setExportacao(res.exportacao ?? []);
       } catch (err: unknown) {
         const e = err as { message?: string };
         setError(e?.message || 'Falha ao carregar cotações de mercado.');
@@ -43,20 +53,58 @@ export default function MercadoPage() {
           Mercado & Preços
         </h1>
         <div style={{ fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px' }}>
-          Cotações de mercado e referência de exportação
+          Dólar oficial (Banco Central), preço de exportação (Comex Stat) e cotações registradas
         </div>
       </div>
 
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+        {/* Dólar PTAX */}
+        <div style={cartao}>
+          <div style={rotulo}>DÓLAR PTAX · BANCO CENTRAL</div>
+          {dolar?.erro ? (
+            <div style={{ fontSize: '13px', color: 'var(--hp-critico)', marginTop: '8px' }}>{dolar.erro}</div>
+          ) : (
+            <>
+              <div style={valor}>{brl(dolar?.venda)}</div>
+              <div style={{ fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px' }}>
+                venda · cotação de {formatDateTime(dolar?.data_hora)}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Preço de exportação por produto */}
+        {exportacao.map((e) => (
+          <div key={e.produto} style={cartao}>
+            <div style={rotulo}>{e.produto.toUpperCase()} · PREÇO MÉDIO DE EXPORTAÇÃO</div>
+            {e.erro ? (
+              <div style={{ fontSize: '13px', color: 'var(--hp-critico)', marginTop: '8px' }}>{e.erro}</div>
+            ) : (
+              <>
+                <div style={valor}>{brl(e.preco_brl_kg)}<span style={{ fontSize: '13px', color: 'var(--hp-text-2)', fontWeight: 400 }}> /kg</span></div>
+                <div style={{ fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px' }}>
+                  US$ {e.preco_usd_kg != null ? e.preco_usd_kg.toFixed(2) : '--'}/kg FOB · média dos últimos 12 meses
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', fontWeight: 600 }}>
+        Cotações registradas no HarvestPoint
+      </div>
+
       {precos.length === 0 ? (
-        <div style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '48px 24px', textAlign: 'center', marginTop: '20px' }}>
+        <div style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '48px 24px', textAlign: 'center', marginTop: '4px' }}>
           <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '48px', color: 'var(--hp-text-3)', display: 'block', marginBottom: '12px' }}>
             payments
           </span>
           <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--hp-text)' }}>
-            Nenhuma cotação de mercado disponível no momento
+            Nenhuma cotação registrada no sistema
           </div>
           <p style={{ fontSize: '13px', color: 'var(--hp-text-2)', maxWidth: '480px', margin: '8px auto 0', lineHeight: '20px' }}>
-            A integração com a API de preços agrícolas e cotações de exportação será conectada em breve.
+            Os preços de referência acima vêm das APIs públicas. Cotações locais (ex.: preço pago na porteira) podem ser registradas pelo técnico.
           </p>
         </div>
       ) : (

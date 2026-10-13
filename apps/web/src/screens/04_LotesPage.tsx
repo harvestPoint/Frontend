@@ -2,7 +2,7 @@
 // e adaptado para React + TypeScript + Tailwind pelo pipeline de migração.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LotesVazioState from '@/features/lotes/components/LotesVazioState';
+import LotesVazioState from '@/components/LotesVazioState';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   createLote,
@@ -61,7 +61,7 @@ export default function LotesPage() {
   // Atualiza o estado inicial do formulário caso o usuário seja carregado assincronamente
   useEffect(() => {
     if (user?.propriedade && !form.propriedade && !editing) {
-      setForm((prev) => ({ ...prev, propriedade: user.propriedade }));
+      setForm((prev) => ({ ...prev, propriedade: user.propriedade ?? '' }));
     }
   }, [user?.propriedade, form.propriedade, editing]);
 
@@ -316,16 +316,16 @@ export default function LotesPage() {
           </div>
           <div style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '880px', tableLayout: 'fixed' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1000px', tableLayout: 'fixed' }}>
                 <thead>
                   <tr style={{ height: '48px', background: 'var(--hp-surface-2)' }}>
-                    <th style={{ width: '100px', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap' }}>
+                    <th style={{ width: '170px', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap' }}>
                       CÓDIGO ↓
                     </th>
                     <th style={{ width: '24%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap' }}>
                       PROPRIEDADE
                     </th>
-                    <th style={{ width: '13%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap' }}>
+                    <th style={{ width: '15%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap' }}>
                       CULTURA
                     </th>
                     <th style={{ width: '18%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap' }}>
@@ -355,13 +355,13 @@ export default function LotesPage() {
                   ) : (
                     filtrados.map((lote) => (
                       <tr key={lote.id} style={{ height: compacto ? '40px' : '52px', borderTop: '1px solid var(--hp-border)' }}>
-                        <td style={{ padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => navigate(`/lotes/${lote.id}`)}>
+                        <td style={{ padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={lote.codigo} onClick={() => navigate(`/lotes/${lote.id}`)}>
                           {lote.codigo}
                         </td>
                         <td style={{ padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {lote.propriedade}
                         </td>
-                        <td style={{ padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={lote.cultura}>
                           {lote.cultura}
                         </td>
                         <td style={{ padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

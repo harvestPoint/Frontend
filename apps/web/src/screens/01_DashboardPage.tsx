@@ -1,5 +1,5 @@
-// apps/web/src/features/dashboard/pages/DashboardPage.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+// apps/web/src/screens/01_DashboardPage.tsx
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProperty } from '@/contexts/PropertyContext';
@@ -14,6 +14,7 @@ import {
   type Lote,
   type Leitura,
 } from '@/lib/api';
+import ClimaComparativo from '@/components/ClimaComparativo';
 
 interface ChipItem {
   id: string;
@@ -324,6 +325,14 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Clima da região (Open-Meteo) junto com o clima no hectare (ESP32) */}
+      <ClimaComparativo
+        latitude={selected?.latitude}
+        longitude={selected?.longitude}
+        local={`${nomePropriedade} · ${municipioPropriedade}`}
+        leitura={ultimaLeitura}
+      />
 
       {/* Grid Principal: Gráfico Dinâmico + Lista de Alertas */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', alignItems: 'start' }}>
