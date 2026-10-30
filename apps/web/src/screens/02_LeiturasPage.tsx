@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { listLeituras, createLeitura, exportLeiturasCsv, listSensores, formatDateTime, type Leitura, type Sensor } from '@/lib/api';
+import { listLeituras, createLeitura, exportLeiturasCsv, listSensores, formatDateTime, readApiError, type Leitura, type Sensor } from '@/lib/api';
+import { paraNumero } from '@/lib/validacao';
+import KitsDemoLeituras from '@/components/automacao/KitsDemoLeituras';
 
 export default function LeiturasPage() {
   const [leituras, setLeituras] = useState<Leitura[]>([]);
   const [sensores, setSensores] = useState<Sensor[]>([]);
   const [loading, setLoading] = useState(true);
+  // Só a primeira carga troca a tela por "Carregando telemetria..."; depois a
+  // lista atualiza no lugar, sem a página sumir.
+  const [jaCarregou, setJaCarregou] = useState(false);
   const [error, setError] = useState('');
+  const [manualErro, setManualErro] = useState('');
   const [busca, setBusca] = useState('');
   const [filtroForaFaixa, setFiltroForaFaixa] = useState(false);
 
@@ -33,10 +39,10 @@ export default function LeiturasPage() {
         setSelectedSensorId(sensoresData[0].id);
       }
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e?.message || 'Falha ao carregar histórico de leituras.');
+      setError(readApiError(err).message || 'Falha ao carregar histórico de leituras.');
     } finally {
       setLoading(false);
+      setJaCarregou(true);
     }
   }
 
@@ -46,23 +52,31 @@ export default function LeiturasPage() {
 
   async function handleSalvarManual(e: React.FormEvent) {
     e.preventDefault();
+    if (savingManual) return;
     if (!selectedSensorId) {
-      alert('Selecione um sensor para registrar a leitura.');
+      setManualErro('Selecione um sensor para registrar a leitura.');
+      return;
+    }
+    // Antes um valor inválido (ou 0) virava 25 °C / 60 % sem avisar
+    const temperatura = paraNumero(tempInput);
+    const umidade = paraNumero(umidInput);
+    if (Number.isNaN(temperatura) || temperatura < -40 || temperatura > 80) {
+      setManualErro('Temperatura inválida (use um número entre -40 e 80 °C).');
+      return;
+    }
+    if (Number.isNaN(umidade) || umidade < 0 || umidade > 100) {
+      setManualErro('Umidade inválida (use um número entre 0 e 100 %).');
       return;
     }
 
     try {
       setSavingManual(true);
-      const nova = await createLeitura({
-        sensor_id: Number(selectedSensorId),
-        temperatura: parseFloat(tempInput) || 25,
-        umidade: parseFloat(umidInput) || 60,
-      });
+      setManualErro('');
+      const nova = await createLeitura({ sensor_id: Number(selectedSensorId), temperatura, umidade });
       setLeituras((prev) => [nova, ...prev]);
       setShowManual(false);
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } };
-      alert(e?.response?.data?.message || 'Erro ao registrar leitura.');
+      setManualErro(readApiError(err).message || 'Erro ao registrar leitura.');
     } finally {
       setSavingManual(false);
     }
@@ -86,8 +100,8 @@ export default function LeiturasPage() {
         umidade: umidRandom,
       });
       setLeituras((prev) => [nova, ...prev]);
-    } catch {
-      alert('Erro ao enviar telemetria simulada.');
+    } catch (err) {
+      setError(`Erro ao enviar telemetria simulada: ${readApiError(err).message}`);
     } finally {
       setGerandoSimulacao(false);
     }
@@ -100,7 +114,7 @@ export default function LeiturasPage() {
     return matchBusca && matchFaixa;
   });
 
-  if (loading) {
+  if (loading && !jaCarregou) {
     return <div style={{ padding: '24px', fontSize: '14px', color: 'var(--hp-text-2)' }}>Carregando telemetria...</div>;
   }
 
@@ -172,6 +186,9 @@ export default function LeiturasPage() {
             <div style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '15px', fontWeight: '600' }}>
               Novo Registro Manual de Microclima
             </div>
+            {manualErro ? (
+              <div role="alert" style={{ fontSize: '13px', color: 'var(--hp-critico)', background: 'var(--hp-critico-bg)', borderRadius: '10px', padding: '10px 12px' }}>{manualErro}</div>
+            ) : null}
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: 'var(--hp-text-2)' }}>
                 Sensor
@@ -337,6 +354,8 @@ export default function LeiturasPage() {
           </tbody>
         </table>
       </div>
+
+      <KitsDemoLeituras />
     </>
   );
 }

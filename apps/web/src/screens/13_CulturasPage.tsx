@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { listCulturas, createCultura, deleteCultura, type Cultura } from '@/lib/api';
+import { listCulturas, createCultura, updateCultura, deleteCultura, readApiError, type Cultura } from '@/lib/api';
+import { paraNumero } from '@/lib/validacao';
 
 export default function CulturasPage() {
   const [culturas, setCulturas] = useState<Cultura[]>([]);
@@ -7,8 +8,10 @@ export default function CulturasPage() {
   const [error, setError] = useState('');
   const [busca, setBusca] = useState('');
 
-  // Form state
+  // Form state (o mesmo formulário serve para criar e para editar)
   const [showForm, setShowForm] = useState(false);
+  const [editando, setEditando] = useState<Cultura | null>(null);
+  const [formErro, setFormErro] = useState('');
   const [saving, setSaving] = useState(false);
   const [nome, setNome] = useState('');
   const [ciclo, setCiclo] = useState('120');
@@ -24,8 +27,7 @@ export default function CulturasPage() {
       const data = await listCulturas();
       setCulturas(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e?.message || 'Falha ao carregar culturas.');
+      setError(readApiError(err).message || 'Falha ao carregar culturas.');
     } finally {
       setLoading(false);
     }
@@ -35,41 +37,96 @@ export default function CulturasPage() {
     loadData();
   }, []);
 
-  async function handleCreate(e: React.FormEvent) {
+  function preencher(c: { nome: string; ciclo: string; tMin: string; tMax: string; uMin: string; uMax: string }) {
+    setNome(c.nome);
+    setCiclo(c.ciclo);
+    setTempMin(c.tMin);
+    setTempMax(c.tMax);
+    setUmidMin(c.uMin);
+    setUmidMax(c.uMax);
+  }
+
+  function abrirNovo() {
+    setEditando(null);
+    setFormErro('');
+    preencher({ nome: '', ciclo: '120', tMin: '20.0', tMax: '32.0', uMin: '50.0', uMax: '80.0' });
+    setShowForm(true);
+  }
+
+  function abrirEdicao(c: Cultura) {
+    setEditando(c);
+    setFormErro('');
+    preencher({
+      nome: c.nome,
+      ciclo: String(c.ciclo_medio_dias),
+      tMin: String(c.temperatura_min),
+      tMax: String(c.temperatura_max),
+      uMin: String(c.umidade_min),
+      uMax: String(c.umidade_max),
+    });
+    setShowForm(true);
+  }
+
+  function fecharForm() {
+    setShowForm(false);
+    setEditando(null);
+    setFormErro('');
+  }
+
+  async function handleSalvar(e: React.FormEvent) {
     e.preventDefault();
-    if (!nome.trim()) {
-      alert('Informe o nome da cultura.');
+    if (saving) return;
+    // Antes "Number(x) || padrão" trocava 0 ou texto inválido por um valor padrão sem avisar
+    const dados = {
+      nome: nome.trim(),
+      ciclo_medio_dias: paraNumero(ciclo),
+      temperatura_min: paraNumero(tempMin),
+      temperatura_max: paraNumero(tempMax),
+      umidade_min: paraNumero(umidMin),
+      umidade_max: paraNumero(umidMax),
+    };
+    const problemas: string[] = [];
+    if (!dados.nome) problemas.push('Informe o nome da cultura');
+    if (!(dados.ciclo_medio_dias > 0)) problemas.push('Ciclo em dias, maior que zero');
+    if ([dados.temperatura_min, dados.temperatura_max, dados.umidade_min, dados.umidade_max].some(Number.isNaN)) {
+      problemas.push('Preencha as faixas de temperatura e umidade com números');
+    } else {
+      if (dados.temperatura_min > dados.temperatura_max) problemas.push('Temperatura mínima maior que a máxima');
+      if (dados.umidade_min > dados.umidade_max) problemas.push('Umidade mínima maior que a máxima');
+    }
+    if (problemas.length > 0) {
+      setFormErro(problemas.join(' · '));
       return;
     }
 
     try {
       setSaving(true);
-      const nova = await createCultura({
-        nome: nome.trim(),
-        ciclo_medio_dias: Number(ciclo) || 120,
-        temperatura_min: Number(tempMin) || 20,
-        temperatura_max: Number(tempMax) || 32,
-        umidade_min: Number(umidMin) || 50,
-        umidade_max: Number(umidMax) || 80,
-      });
-      setCulturas((prev) => [nova, ...prev]);
-      setNome('');
-      setShowForm(false);
+      setFormErro('');
+      if (editando) {
+        const salva = await updateCultura(editando.id, dados);
+        setCulturas((prev) => prev.map((c) => (c.id === salva.id ? salva : c)));
+      } else {
+        const nova = await createCultura(dados);
+        setCulturas((prev) => [nova, ...prev]);
+      }
+      fecharForm();
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } };
-      alert(e?.response?.data?.message || 'Erro ao criar cultura.');
+      const apiErr = readApiError(err);
+      setFormErro(apiErr.details?.join(' · ') || apiErr.message || 'Erro ao salvar cultura.');
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(id: number) {
-    if (!window.confirm('Deseja excluir esta cultura?')) return;
+  async function handleDelete(c: Cultura) {
+    if (!window.confirm(`Excluir a cultura "${c.nome}"?`)) return;
     try {
-      await deleteCultura(id);
-      setCulturas((prev) => prev.filter((c) => c.id !== id));
-    } catch {
-      alert('Erro ao excluir cultura.');
+      setError('');
+      await deleteCultura(c.id);
+      setCulturas((prev) => prev.filter((x) => x.id !== c.id));
+    } catch (err: unknown) {
+      // ex.: 409 "Esta cultura está em uso por 2 lote(s)..."
+      setError(readApiError(err).message || 'Erro ao excluir cultura.');
     }
   }
 
@@ -94,7 +151,7 @@ export default function CulturasPage() {
         </div>
         <button
           type="button"
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => (showForm ? fecharForm() : abrirNovo())}
           style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
         >
           <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>
@@ -105,8 +162,13 @@ export default function CulturasPage() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-accent)', borderRadius: '16px', padding: '20px', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--hp-text)' }}>Cadastrar Nova Cultura</div>
+        <form onSubmit={handleSalvar} noValidate style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-accent)', borderRadius: '16px', padding: '20px', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--hp-text)' }}>
+            {editando ? `Editar cultura · ${editando.nome}` : 'Cadastrar Nova Cultura'}
+          </div>
+          {formErro ? (
+            <div role="alert" style={{ fontSize: '13px', color: 'var(--hp-critico)', background: 'var(--hp-critico-bg)', borderRadius: '10px', padding: '10px 12px' }}>{formErro}</div>
+          ) : null}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: 'var(--hp-text-2)' }}>
@@ -189,7 +251,7 @@ export default function CulturasPage() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={fecharForm}
               style={{ height: '36px', padding: '0 14px', borderRadius: '10px', border: '1px solid var(--hp-input-border)', background: 'transparent', color: 'var(--hp-text-2)', fontSize: '13px', cursor: 'pointer' }}
             >
               Cancelar
@@ -199,7 +261,7 @@ export default function CulturasPage() {
               disabled={saving}
               style={{ height: '36px', padding: '0 18px', borderRadius: '10px', border: 'none', background: 'var(--hp-accent)', color: '#fff', fontWeight: '600', fontSize: '13px', cursor: 'pointer' }}
             >
-              {saving ? 'Salvando...' : 'Salvar Cultura'}
+              {saving ? 'Salvando...' : editando ? 'Salvar alterações' : 'Salvar Cultura'}
             </button>
           </div>
         </form>
@@ -276,8 +338,20 @@ export default function CulturasPage() {
                   <td style={{ padding: '0 16px', textAlign: 'right' }}>
                     <button
                       type="button"
-                      onClick={() => handleDelete(cult.id)}
+                      onClick={() => abrirEdicao(cult)}
+                      title="Editar cultura"
+                      aria-label={`Editar ${cult.nome}`}
+                      style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--hp-text-2)', padding: '6px' }}
+                    >
+                      <span aria-hidden="true" style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>
+                        edit
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(cult)}
                       title="Excluir cultura"
+                      aria-label={`Excluir ${cult.nome}`}
                       style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--hp-critico)', padding: '6px' }}
                     >
                       <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>

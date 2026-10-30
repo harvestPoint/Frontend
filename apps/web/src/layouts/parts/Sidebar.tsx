@@ -113,6 +113,7 @@ export default function Sidebar({ alertasPendentes = 0 }: SidebarProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <NavItem to="/lotes" icon="grid_view" label="Lotes" />
           <NavItem to="/leituras" icon="sensors" label="Leituras IoT" />
+          <NavItem to="/automacao" icon="water_drop" label="Automação" />
         </div>
 
         <GroupLabel>INTELIGÊNCIA</GroupLabel>

@@ -23,6 +23,8 @@ export interface Lote {
   propriedade: string;
   propriedade_id?: number;
   municipio?: string;
+  /** null quando o lote ainda não tem cultura (aí `cultura` vem "Não definida") */
+  cultura_id?: number | null;
   cultura: string;
   variedade: string;
   area_ha: number;
@@ -307,6 +309,13 @@ export async function listLotes() {
 export async function getLote(id: string | number) {
   const { data } = await api.get<{ data: Lote }>(`/lotes/${id}`);
   return data.data;
+}
+
+/** Status gravados no banco (historico_cultivos.status só aceita estes dois). */
+export const STATUS_LOTE: Record<string, string> = { ATIVO: 'Ativo', FINALIZADO: 'Finalizado' };
+
+export function statusLoteLabel(status?: string | null) {
+  return STATUS_LOTE[(status || '').toUpperCase()] ?? (status || '—');
 }
 
 export async function createLote(payload: Partial<Lote> & { codigo: string }) {

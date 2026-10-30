@@ -1,0 +1,184 @@
+/* Login e Cadastro: mesmo esqueleto, tipografia e botões da landing.
+   As duas telas ficam sempre no tema claro (fundo de foto + card branco).
+   Quem rola é a página inteira, nunca o card: nada de altura fixa aqui. */
+
+.hp-auth {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #2A2418;
+  background-size: cover;
+  background-position: center;
+  color: #FFFDF8;
+  font-family: Inter, sans-serif;
+}
+.hp-auth-scrim { position: absolute; inset: 0; pointer-events: none; }
+.hp-auth--login .hp-auth-scrim {
+  background:
+    linear-gradient(180deg, rgba(19,17,13,.40), transparent 30%, rgba(19,17,13,.48)),
+    linear-gradient(100deg, rgba(19,17,13,.82), rgba(19,17,13,.55) 40%, rgba(19,17,13,.08) 70%);
+}
+.hp-auth--signup .hp-auth-scrim {
+  background:
+    linear-gradient(180deg, rgba(19,17,13,.40), transparent 30%, rgba(19,17,13,.48)),
+    linear-gradient(280deg, rgba(19,17,13,.82), rgba(19,17,13,.55) 40%, rgba(19,17,13,.08) 70%);
+}
+
+.hp-auth-shell {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 clamp(16px, 4vw, 56px);
+}
+
+/* Topo */
+.hp-auth-top { height: 72px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.hp-auth-logo { display: inline-flex; border-radius: 12px; color: inherit; }
+.hp-auth-logo:hover { color: inherit; opacity: .9; }
+.hp-auth-acoes { display: flex; align-items: center; gap: 20px; }
+.hp-auth-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,253,248,.72); white-space: nowrap; }
+.hp-auth-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #8FB596; animation: hpPulse 2s ease-in-out infinite; }
+.hp-auth-btn-ghost {
+  height: 40px; padding: 0 16px; display: inline-flex; align-items: center; border-radius: 12px;
+  border: 1px solid rgba(255,253,248,.45); color: #FFFDF8; font-size: 14px; font-weight: 600; white-space: nowrap;
+  transition: background 150ms ease-out, border-color 150ms ease-out;
+}
+.hp-auth-btn-ghost:hover { color: #FFFDF8; border-color: #FFFDF8; background: rgba(255,253,248,.08); }
+
+/* Miolo: texto de apresentação + card */
+.hp-auth-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 56px;
+  padding: 24px 0 40px;
+}
+.hp-auth--signup .hp-auth-main { flex-direction: row-reverse; }
+.hp-auth-hero { max-width: 520px; }
+.hp-auth--signup .hp-auth-hero { text-align: right; }
+.hp-auth-sobrelinha { font-size: 11px; line-height: 14px; font-weight: 700; letter-spacing: .1em; color: rgba(255,253,248,.82); }
+.hp-auth-h1 {
+  margin: 16px 0 0;
+  font-family: Newsreader, Georgia, serif;
+  font-size: clamp(36px, 4.2vw, 56px);
+  line-height: 1.06;
+  font-weight: 500;
+  letter-spacing: -.02em;
+  color: #FFFDF8;
+  text-wrap: pretty;
+}
+.hp-auth-h1 em { font-style: normal; color: #B9D0BC; }
+.hp-auth-p { margin: 20px 0 0; font-size: 17px; line-height: 27px; color: rgba(255,253,248,.88); text-wrap: pretty; }
+.hp-auth--signup .hp-auth-p { margin-left: auto; }
+.hp-auth-lista { list-style: none; margin: 24px 0 0; padding: 20px 0 0; border-top: 1px solid rgba(255,253,248,.2); display: grid; gap: 10px; font-size: 14px; color: rgba(255,253,248,.82); }
+.hp-auth-lista li { display: flex; align-items: center; gap: 10px; }
+.hp-auth--signup .hp-auth-lista li { justify-content: flex-end; }
+.hp-auth-lista li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #B9D0BC; flex-shrink: 0; }
+.hp-auth--signup .hp-auth-lista li::before { order: 2; }
+
+/* Card do formulário */
+.hp-auth-card {
+  width: min(100%, 440px);
+  flex-shrink: 0;
+  padding: 32px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.97);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,.5);
+  box-shadow: 0 20px 48px rgba(22,21,15,.18);
+  color: #1F211D;
+  animation: hpIn 320ms ease-out backwards;
+}
+.hp-auth--signup .hp-auth-card { width: min(100%, 460px); }
+.hp-auth-card-icone { width: 48px; height: 48px; border-radius: 16px; background: #E7EFE7; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.hp-auth-card-titulo { margin: 0; font-family: 'Plus Jakarta Sans', Inter, sans-serif; font-size: 22px; line-height: 28px; font-weight: 700; text-align: center; color: #1F211D; }
+.hp-auth-card-sub { margin: 6px 0 0; font-size: 13px; line-height: 18px; color: #6B6D63; text-align: center; }
+.hp-auth-secao { font-size: 11px; line-height: 14px; font-weight: 700; letter-spacing: .1em; color: #6A6455; margin: 24px 0 10px; }
+
+.hp-auth-label { display: block; font-size: 13px; line-height: 16px; font-weight: 600; color: #1F211D; margin: 16px 0 6px; }
+.hp-auth-campo {
+  height: 48px; border-radius: 12px; background: #FFFFFF; border: 1.5px solid #D6D4CB;
+  display: flex; align-items: center; gap: 10px; padding: 0 14px;
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out, background-color 150ms ease-out;
+}
+.hp-auth-campo:focus-within { border-color: #5C7F62; box-shadow: 0 0 0 3px rgba(92,127,98,.18); }
+.hp-auth-campo.erro { border-color: #D92D20; background: #FEF3F2; }
+.hp-auth-campo input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: transparent; font-size: 14px; color: #1F211D; }
+.hp-auth-campo input::placeholder { color: #8B8D82; }
+.hp-auth-ic { font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga' 1; font-size: 18px; line-height: 1; color: #8B8D82; flex-shrink: 0; }
+.hp-auth-campo.erro .hp-auth-ic { color: #D92D20; }
+.hp-auth-olho { border: 0; background: transparent; padding: 4px; margin-right: -4px; border-radius: 8px; cursor: pointer; display: flex; color: #6B6D63; }
+.hp-auth-olho:hover { color: #1F211D; }
+.hp-auth-erro-campo { font-size: 12px; line-height: 16px; color: #B42318; margin-top: 4px; }
+.hp-auth-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hp-auth-grade > * { min-width: 0; }
+
+.hp-auth-alerta { margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: #FEF3F2; border: 1.5px solid #FDA29B; color: #B42318; font-size: 13px; line-height: 18px; }
+.hp-auth-alerta ul { margin: 8px 0 0; padding-left: 20px; }
+.hp-auth-dica { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: #F4F3EE; color: #4A4538; font-size: 12px; line-height: 18px; }
+
+.hp-auth-btn {
+  width: 100%; height: 52px; margin-top: 20px; border: 0; border-radius: 12px;
+  background: #5C7F62; color: #FFFFFF; font: 600 15px/1 Inter, sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
+  transition: background 150ms ease-out;
+}
+.hp-auth-btn:hover { background: #4A6950; }
+.hp-auth-btn:disabled { cursor: progress; opacity: .75; }
+.hp-auth-link-btn { border: 0; background: transparent; padding: 0; color: #4A6950; font: 600 12px/16px Inter, sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.hp-auth-link-btn:hover { color: #2F4A34; }
+.hp-auth-rodape-card { text-align: center; font-size: 13px; color: #6B6D63; margin-top: 16px; }
+.hp-auth-rodape-card a { color: #4A6950; font-weight: 600; }
+.hp-auth-rodape-card a:hover { color: #2F4A34; }
+
+/* Perfis (Proprietário / Técnico) e alternância "Cadastrar agora / Depois" */
+.hp-auth-perfis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hp-auth-perfil {
+  position: relative; min-height: 92px; padding: 14px; border-radius: 14px; text-align: left;
+  border: 1px solid #D6D4CB; background: #FFFFFF; color: #1F211D; cursor: pointer;
+  display: flex; flex-direction: column; gap: 4px; font-family: inherit;
+  transition: border-color 150ms ease-out, background-color 150ms ease-out;
+}
+.hp-auth-perfil[aria-checked='true'] { border: 2px solid #5C7F62; padding: 13px; background: #E7EFE7; }
+.hp-auth-perfil-nome { font-size: 13px; line-height: 16px; font-weight: 600; margin-top: 4px; }
+.hp-auth-perfil-desc { font-size: 12px; line-height: 15px; color: #6B6D63; }
+.hp-auth-alterna { display: flex; gap: 4px; background: #F4F3EE; border-radius: 10px; padding: 3px; }
+.hp-auth-alterna button { border: 0; border-radius: 8px; padding: 6px 10px; font: 600 12px/16px Inter, sans-serif; cursor: pointer; background: transparent; color: #6B6D63; }
+.hp-auth-alterna button[aria-pressed='true'] { background: #FFFFFF; color: #1F211D; box-shadow: 0 1px 2px rgba(22,21,15,.08); }
+
+/* Rodapé da página */
+.hp-auth-foot {
+  min-height: 64px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px;
+  padding: 16px 0; border-top: 1px solid rgba(255,253,248,.15); font-size: 12px; color: rgba(255,253,248,.65);
+}
+
+/* Foco visível para quem navega pelo teclado */
+.hp-auth a:focus-visible, .hp-auth button:focus-visible { outline: 2px solid #B9D0BC; outline-offset: 2px; }
+.hp-auth-card a:focus-visible, .hp-auth-card button:focus-visible { outline-color: #5C7F62; }
+
+@media (max-width: 1023px) {
+  .hp-auth-main, .hp-auth--signup .hp-auth-main { flex-direction: column; justify-content: center; gap: 28px; padding-top: 8px; }
+  .hp-auth-hero, .hp-auth--signup .hp-auth-hero { max-width: 560px; text-align: center; }
+  .hp-auth--signup .hp-auth-p { margin-left: 0; }
+  .hp-auth-p, .hp-auth-lista { display: none; }
+  .hp-auth-h1 { margin-top: 10px; font-size: clamp(30px, 6vw, 40px); }
+}
+@media (max-width: 599px) {
+  .hp-auth-top { height: 60px; }
+  .hp-auth-status { display: none; }
+  .hp-auth-hero { display: none; }
+  .hp-auth-main { padding: 8px 0 24px; }
+  .hp-auth-card { padding: 24px 20px; border-radius: 18px; }
+  .hp-auth-foot { justify-content: center; text-align: center; }
+}
+@media (max-width: 339px) {
+  .hp-auth-grade, .hp-auth-perfis { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-auth-card, .hp-auth-status::before { animation: none; }
+  .hp-auth-campo, .hp-auth-btn, .hp-auth-perfil, .hp-auth-btn-ghost { transition: none; }
+}

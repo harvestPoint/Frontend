@@ -23,6 +23,7 @@ import ProdutoresPage from '@/screens/11_ProdutoresPage';
 import PropriedadesPage from '@/screens/12_PropriedadesPage';
 import CulturasPage from '@/screens/13_CulturasPage';
 import SensoresPage from '@/screens/14_SensoresPage';
+import AutomacaoPage from '@/screens/15_AutomacaoPage';
 
 /** Raiz pública: mostra a landing pra quem não está logado e manda quem já
  * está logado direto pro Dashboard — os dois "moram" na mesma rota "/". */
@@ -51,6 +52,7 @@ export default function AppRoutes() {
         <Route path="/lotes" element={<LotesPage />} />
         <Route path="/lotes/:id" element={<LoteDetalhePage />} />
         <Route path="/leituras" element={<LeiturasPage />} />
+        <Route path="/automacao" element={<AutomacaoPage />} />
         <Route path="/inteligencia/colheita" element={<JanelaColheitaPage />} />
         <Route path="/inteligencia/exportacao" element={<JanelaExportacaoPage />} />
         <Route path="/mercado" element={<MercadoPage />} />

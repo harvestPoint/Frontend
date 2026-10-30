@@ -12,6 +12,7 @@ const CRUMBS: Record<string, string> = {
   '/alertas': 'Alertas',
   '/lotes': 'Lotes / Talhões',
   '/leituras': 'Leituras IoT',
+  '/automacao': 'Automação',
   '/inteligencia/colheita': 'Janela de Colheita',
   '/inteligencia/exportacao': 'Janela de Exportação',
   '/mercado': 'Mercado & Preços',

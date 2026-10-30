@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { listPropriedades, createPropriedade, deletePropriedade, type Propriedade } from '@/lib/api';
+import { listPropriedades, createPropriedade, updatePropriedade, deletePropriedade, readApiError, type Propriedade } from '@/lib/api';
+import { validarFazenda, fazendaParaApi } from '@/lib/validacao';
+import { useProperty } from '@/contexts/PropertyContext';
 
 export default function PropriedadesPage() {
   const [propriedades, setPropriedades] = useState<Propriedade[]>([]);
@@ -7,9 +9,13 @@ export default function PropriedadesPage() {
   const [error, setError] = useState('');
   const [busca, setBusca] = useState('');
 
-  // Form state
+  const { reload: recarregarSeletor } = useProperty();
+
+  // Form state (o mesmo formulário serve para criar e para editar)
   const [showForm, setShowForm] = useState(false);
+  const [editando, setEditando] = useState<Propriedade | null>(null);
   const [saving, setSaving] = useState(false);
+  const [formErro, setFormErro] = useState('');
   const [nome, setNome] = useState('');
   const [municipio, setMunicipio] = useState('Petrolina - PE');
   const [areaTotal, setAreaTotal] = useState('100');
@@ -23,8 +29,7 @@ export default function PropriedadesPage() {
       const data = await listPropriedades();
       setPropriedades(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e?.message || 'Falha ao carregar propriedades.');
+      setError(readApiError(err).message || 'Falha ao carregar propriedades.');
     } finally {
       setLoading(false);
     }
@@ -34,40 +39,74 @@ export default function PropriedadesPage() {
     loadData();
   }, []);
 
-  async function handleCreate(e: React.FormEvent) {
+  function abrirNovo() {
+    setEditando(null);
+    setFormErro('');
+    setNome('');
+    setMunicipio('Petrolina - PE');
+    setAreaTotal('100');
+    setLatitude('-9.3891');
+    setLongitude('-40.5027');
+    setShowForm(true);
+  }
+
+  function abrirEdicao(prop: Propriedade) {
+    setEditando(prop);
+    setFormErro('');
+    setNome(prop.nome);
+    setMunicipio(prop.municipio);
+    setAreaTotal(String(prop.area_total));
+    setLatitude(String(prop.latitude));
+    setLongitude(String(prop.longitude));
+    setShowForm(true);
+  }
+
+  function fecharForm() {
+    setShowForm(false);
+    setEditando(null);
+    setFormErro('');
+  }
+
+  async function handleSalvar(e: React.FormEvent) {
     e.preventDefault();
-    if (!nome.trim()) {
-      alert('Informe o nome da propriedade.');
+    if (saving) return;
+    // Antes um número inválido virava um valor padrão em silêncio (ex.: latitude "abc" → -9.3891)
+    const form = { nome, municipio, area: areaTotal, latitude, longitude };
+    const erros = validarFazenda(form);
+    if (Object.keys(erros).length > 0) {
+      setFormErro(Object.values(erros).join(' · '));
       return;
     }
 
     try {
       setSaving(true);
-      const nova = await createPropriedade({
-        nome: nome.trim(),
-        municipio: municipio.trim(),
-        area_total: Number(areaTotal) || 50,
-        latitude: Number(latitude) || -9.3891,
-        longitude: Number(longitude) || -40.5027,
-      });
-      setPropriedades((prev) => [nova, ...prev]);
-      setNome('');
-      setShowForm(false);
+      setFormErro('');
+      const dados = fazendaParaApi(form);
+      if (editando) {
+        const salva = await updatePropriedade(editando.id, dados);
+        setPropriedades((prev) => prev.map((p) => (p.id === salva.id ? { ...p, ...salva } : p)));
+      } else {
+        const nova = await createPropriedade(dados);
+        setPropriedades((prev) => [nova, ...prev]);
+      }
+      fecharForm();
+      void recarregarSeletor().catch(() => undefined); // atualiza o seletor do topo
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } };
-      alert(e?.response?.data?.message || 'Erro ao criar propriedade.');
+      const apiErr = readApiError(err);
+      setFormErro(apiErr.details?.join(' · ') || apiErr.message || 'Erro ao salvar propriedade.');
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(id: number) {
-    if (!window.confirm('Deseja excluir esta propriedade? Todos os lotes associados serão removidos.')) return;
+  async function handleDelete(prop: Propriedade) {
+    if (!window.confirm(`Excluir a propriedade "${prop.nome}"? Todos os lotes, sensores e leituras dela também serão apagados.`)) return;
     try {
-      await deletePropriedade(id);
-      setPropriedades((prev) => prev.filter((p) => p.id !== id));
-    } catch {
-      alert('Erro ao excluir propriedade.');
+      await deletePropriedade(prop.id);
+      setPropriedades((prev) => prev.filter((p) => p.id !== prop.id));
+      void recarregarSeletor().catch(() => undefined);
+    } catch (err: unknown) {
+      setError(readApiError(err).message || 'Erro ao excluir propriedade.');
     }
   }
 
@@ -93,7 +132,7 @@ export default function PropriedadesPage() {
         </div>
         <button
           type="button"
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => (showForm ? fecharForm() : abrirNovo())}
           style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
         >
           <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>
@@ -104,8 +143,13 @@ export default function PropriedadesPage() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-accent)', borderRadius: '16px', padding: '20px', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--hp-text)' }}>Cadastrar Nova Propriedade</div>
+        <form onSubmit={handleSalvar} noValidate style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-accent)', borderRadius: '16px', padding: '20px', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--hp-text)' }}>
+            {editando ? `Editar propriedade · ${editando.nome}` : 'Cadastrar Nova Propriedade'}
+          </div>
+          {formErro ? (
+            <div role="alert" style={{ fontSize: '13px', color: 'var(--hp-critico)', background: 'var(--hp-critico-bg)', borderRadius: '10px', padding: '10px 12px' }}>{formErro}</div>
+          ) : null}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: 'var(--hp-text-2)' }}>
@@ -171,7 +215,7 @@ export default function PropriedadesPage() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={fecharForm}
               style={{ height: '36px', padding: '0 14px', borderRadius: '10px', border: '1px solid var(--hp-input-border)', background: 'transparent', color: 'var(--hp-text-2)', fontSize: '13px', cursor: 'pointer' }}
             >
               Cancelar
@@ -181,7 +225,7 @@ export default function PropriedadesPage() {
               disabled={saving}
               style={{ height: '36px', padding: '0 18px', borderRadius: '10px', border: 'none', background: 'var(--hp-accent)', color: '#fff', fontWeight: '600', fontSize: '13px', cursor: 'pointer' }}
             >
-              {saving ? 'Salvando...' : 'Salvar Propriedade'}
+              {saving ? 'Salvando...' : editando ? 'Salvar alterações' : 'Salvar Propriedade'}
             </button>
           </div>
         </form>
@@ -251,11 +295,23 @@ export default function PropriedadesPage() {
                   <td style={{ padding: '0 16px', fontSize: '12px', color: 'var(--hp-text-2)', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                     {prop.latitude?.toFixed(4)}, {prop.longitude?.toFixed(4)}
                   </td>
-                  <td style={{ padding: '0 16px', textAlign: 'right' }}>
+                  <td style={{ padding: '0 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                     <button
                       type="button"
-                      onClick={() => handleDelete(prop.id)}
+                      onClick={() => abrirEdicao(prop)}
+                      title="Editar propriedade"
+                      aria-label={`Editar ${prop.nome}`}
+                      style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--hp-text-2)', padding: '6px' }}
+                    >
+                      <span aria-hidden="true" style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>
+                        edit
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(prop)}
                       title="Excluir propriedade"
+                      aria-label={`Excluir ${prop.nome}`}
                       style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--hp-critico)', padding: '6px' }}
                     >
                       <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>

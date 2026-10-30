@@ -1,0 +1,38 @@
+/* Tela de Automação — só o que inline style não resolve: grades responsivas,
+   hover/foco e a animação do esqueleto. Cores sempre via tokens --hp-*. */
+.au-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--hp-gap); }
+.au-cols-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: var(--hp-gap); align-items: start; }
+.au-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.au-sim { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.au-banner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.au-banner-acoes { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.au-tabela-linha { display: grid; align-items: center; padding: 0 24px; grid-template-columns: 1fr 1.5fr 1fr 0.9fr 1fr 0.9fr 1.1fr 1fr; column-gap: 12px; }
+.au-scroll-x { overflow-x: auto; }
+.au-scroll-x > .au-tabela-min { min-width: 860px; }
+.au-regra-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.au-porque { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.au-card-atuador { transition: border-color 150ms; cursor: pointer; }
+.au-card-atuador:hover { border-color: var(--hp-input-border) !important; }
+.au-card-atuador:focus-visible, .au-linha-clicavel:focus-visible, .au-chart:focus-visible {
+  outline: 2px solid var(--hp-accent); outline-offset: 2px;
+}
+.au-linha-clicavel { cursor: pointer; transition: background-color 150ms; }
+.au-linha-clicavel:hover { background: var(--hp-surface-2); }
+.au-btn { font-family: inherit; cursor: pointer; transition: background-color 150ms, border-color 150ms, color 150ms; }
+.au-btn:focus-visible { outline: 2px solid var(--hp-accent); outline-offset: 2px; }
+.au-btn:disabled { cursor: not-allowed; opacity: .5; }
+.au-btn--primario:hover:not(:disabled) { background: var(--hp-accent-hover) !important; }
+.au-btn--secundario:hover:not(:disabled) { border-color: var(--hp-accent) !important; }
+.au-skel { animation: hpShim 1.5s ease-in-out infinite; }
+
+@media (max-width: 1180px) {
+  .au-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .au-cols-2 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 899px) {
+  .au-grid-3 { grid-template-columns: minmax(0, 1fr); }
+  .au-banner > div:first-of-type { min-width: calc(100% - 40px); }
+  .au-banner-acoes { flex-shrink: 1; width: 100%; }
+  .au-banner-acoes > button { flex: 1 1 auto; }
+  .au-porque, .au-regra-campos { grid-template-columns: minmax(0, 1fr); }
+}

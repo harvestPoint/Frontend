@@ -1,44 +1,48 @@
 // Gerado a partir do design aprovado no Claude Design (HarvestPoint.dc.html)
 // e adaptado para React + TypeScript + Tailwind pelo pipeline de migração.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import LotesVazioState from '@/components/LotesVazioState';
-import { useAuth } from '@/contexts/AuthContext';
+import { useProperty } from '@/contexts/PropertyContext';
 import {
   createLote,
   deleteLote,
+  listCulturas,
   listLotes,
   readApiError,
+  statusLoteLabel,
+  STATUS_LOTE,
   updateLote,
+  type Cultura,
   type Lote,
 } from '@/lib/api';
 
+// "variedade" saiu do formulário: o banco não tem coluna para ela e o valor
+// digitado era descartado (depois de salvar, a tela mostrava o nome da cultura).
 type FormState = {
   codigo: string;
-  propriedade: string;
+  propriedade_id: string;
   cultura: string;
-  variedade: string;
   area_ha: string;
   data_plantio: string;
   sensor_vinculado: string;
   status: string;
 };
 
-const emptyForm = (propriedade: string): FormState => ({
+const emptyForm = (propriedadeId: number | null | undefined): FormState => ({
   codigo: '',
-  propriedade,
-  cultura: 'Manga',
-  variedade: 'Tommy Atkins',
+  propriedade_id: propriedadeId ? String(propriedadeId) : '',
+  cultura: '',
   area_ha: '',
   data_plantio: '',
   sensor_vinculado: '',
-  status: 'ativo',
+  status: 'ATIVO',
 });
 
-function statusLabel(status: string) {
-  if (status === 'em_manejo') return 'em manejo';
-  return status;
-}
+const iconBtn: React.CSSProperties = {
+  fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)',
+  cursor: 'pointer', border: 'none', background: 'transparent', padding: '6px', borderRadius: '8px',
+};
 
 function formatDate(value: string | null) {
   if (!value) return '—';
@@ -49,21 +53,17 @@ function formatDate(value: string | null) {
 
 export default function LotesPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { propriedades, selectedId } = useProperty();
   const [lotes, setLotes] = useState<Lote[]>([]);
+  const [culturas, setCulturas] = useState<Cultura[]>([]);
   const [busca, setBusca] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<Lote | null>(null);
-  const [form, setForm] = useState<FormState>(emptyForm(user?.propriedade || ''));
+  const [form, setForm] = useState<FormState>(emptyForm(selectedId));
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(true);
-
-  // Atualiza o estado inicial do formulário caso o usuário seja carregado assincronamente
-  useEffect(() => {
-    if (user?.propriedade && !form.propriedade && !editing) {
-      setForm((prev) => ({ ...prev, propriedade: user.propriedade ?? '' }));
-    }
-  }, [user?.propriedade, form.propriedade, editing]);
+  const [salvando, setSalvando] = useState(false);
 
   const load = useCallback(async () => {
     setCarregando(true);
@@ -78,30 +78,40 @@ export default function LotesPage() {
 
   useEffect(() => {
     void load();
+    listCulturas().then(setCulturas).catch(() => setCulturas([]));
   }, [load]);
 
   const openCreate = () => {
     setEditing(null);
     setErro('');
-    setForm(emptyForm(user?.propriedade || ''));
+    setForm(emptyForm(selectedId ?? propriedades[0]?.id));
     setDrawerOpen(true);
   };
 
-  const openEdit = (lote: Lote) => {
+  const openEdit = useCallback((lote: Lote) => {
     setEditing(lote);
     setErro('');
     setForm({
       codigo: lote.codigo,
-      propriedade: lote.propriedade,
-      cultura: lote.cultura,
-      variedade: lote.variedade,
+      propriedade_id: lote.propriedade_id ? String(lote.propriedade_id) : '',
+      // sem cultura o backend manda "Não definida"; isso não pode virar cultura nova
+      cultura: lote.cultura_id ? lote.cultura : '',
       area_ha: String(lote.area_ha ?? ''),
       data_plantio: lote.data_plantio || '',
       sensor_vinculado: lote.sensor_vinculado || '',
-      status: lote.status,
+      status: (lote.status || '').toUpperCase() === 'FINALIZADO' ? 'FINALIZADO' : 'ATIVO',
     });
     setDrawerOpen(true);
-  };
+  }, []);
+
+  // O botão "Editar" do detalhe do lote chega aqui como /lotes?editar=ID
+  const editarId = searchParams.get('editar');
+  useEffect(() => {
+    if (!editarId || lotes.length === 0) return;
+    const alvo = lotes.find((l) => String(l.id) === editarId);
+    if (alvo) openEdit(alvo);
+    setSearchParams({}, { replace: true });
+  }, [editarId, lotes, openEdit, setSearchParams]);
 
   const closeDrawer = () => {
     setDrawerOpen(false);
@@ -112,27 +122,34 @@ export default function LotesPage() {
     setForm((f) => ({ ...f, [key]: e.target.value }));
   };
 
-  const salvar = async () => {
+  const salvar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (salvando) return; // evita envio duplicado (duplo clique ou Enter repetido)
     setErro('');
     const parsedArea = Number(String(form.area_ha).replace(',', '.'));
+    if (!form.codigo.trim()) return setErro('Informe o código do lote.');
+    if (!form.propriedade_id) return setErro('Escolha a propriedade do lote.');
+    if (!(parsedArea > 0)) return setErro('Informe uma área maior que zero, em hectares.');
     const payload = {
-      codigo: form.codigo,
-      propriedade: form.propriedade,
+      codigo: form.codigo.trim(),
+      propriedade_id: Number(form.propriedade_id),
       cultura: form.cultura,
-      variedade: form.variedade,
-      area_ha: Number.isNaN(parsedArea) ? 0 : parsedArea,
+      area_ha: parsedArea,
       data_plantio: form.data_plantio || null,
-      sensor_vinculado: form.sensor_vinculado || null,
+      sensor_vinculado: form.sensor_vinculado.trim() || null,
       status: form.status,
     };
+    setSalvando(true);
     try {
       if (editing) await updateLote(editing.id, payload);
-      else await createLote({ ...payload, codigo: form.codigo });
+      else await createLote(payload);
       closeDrawer();
       await load();
     } catch (err) {
       const apiErr = readApiError(err);
       setErro(apiErr.details?.join(' ') || apiErr.message || 'Não foi possível salvar o lote');
+    } finally {
+      setSalvando(false);
     }
   };
 
@@ -159,7 +176,7 @@ export default function LotesPage() {
     return lotes.filter((l) => {
       const matchBusca =
         !q ||
-        [l.codigo, l.cultura, l.variedade, l.propriedade]
+        [l.codigo, l.cultura, l.propriedade]
           .filter(Boolean)
           .some((v) => v.toLowerCase().includes(q));
 
@@ -169,22 +186,21 @@ export default function LotesPage() {
 
       const matchStatus =
         filtroStatus === 'TODOS' ||
-        (l.status || '').toLowerCase() === filtroStatus.toLowerCase();
+        (l.status || '').toUpperCase() === filtroStatus;
 
       return matchBusca && matchProp && matchStatus;
     });
   }, [lotes, busca, filtroPropriedade, filtroStatus]);
 
   const exportarLotes = () => {
-    const headers = ['Código', 'Propriedade', 'Cultura', 'Variedade', 'Área (ha)', 'Plantio', 'Status'];
+    const headers = ['Código', 'Propriedade', 'Cultura', 'Área (ha)', 'Plantio', 'Status'];
     const rows = filtrados.map((l) => [
       `"${l.codigo}"`,
       `"${l.propriedade}"`,
       `"${l.cultura}"`,
-      `"${l.variedade}"`,
       `"${l.area_ha}"`,
       `"${l.data_plantio || ''}"`,
-      `"${l.status}"`,
+      `"${statusLoteLabel(l.status)}"`,
     ]);
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
@@ -227,12 +243,12 @@ export default function LotesPage() {
                 Divisão produtiva por propriedade · {lotes.length} registro{lotes.length === 1 ? '' : 's'}
               </div>
             </div>
-            <div style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }} onClick={openCreate}>
-              <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>
+            <button type="button" style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }} onClick={openCreate}>
+              <span aria-hidden="true" style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>
                 add
               </span>
               Novo lote
-            </div>
+            </button>
           </div>
           {erro && !drawerOpen ? (
             <div style={{ fontSize: '13px', color: 'var(--hp-critico)' }}>{erro}</div>
@@ -285,34 +301,30 @@ export default function LotesPage() {
               }}
             >
               <option value="TODOS">Todos os Status</option>
-              <option value="ativo">Ativo</option>
-              <option value="em_manejo">Em manejo</option>
-              <option value="finalizado">Finalizado</option>
+              {Object.entries(STATUS_LOTE).map(([valor, rotulo]) => (
+                <option key={valor} value={valor}>{rotulo}</option>
+              ))}
             </select>
             <div style={{ width: '1px', height: '28px', background: 'var(--hp-border)' }} />
-            <span
-              title={compacto ? 'Visualização Normal' : 'Visualização Compacta'}
-              style={{
-                fontFamily: "'Material Symbols Outlined'",
-                fontSize: '20px',
-                lineHeight: '1',
-                color: compacto ? 'var(--hp-accent)' : 'var(--hp-text-2)',
-                background: compacto ? 'var(--hp-accent-soft)' : 'transparent',
-                padding: '6px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-              }}
+            <button
+              type="button"
+              title={compacto ? 'Visualização normal' : 'Visualização compacta'}
+              aria-label={compacto ? 'Visualização normal' : 'Visualização compacta'}
+              aria-pressed={compacto}
+              style={{ ...iconBtn, fontSize: '20px', color: compacto ? 'var(--hp-accent)' : 'var(--hp-text-2)', background: compacto ? 'var(--hp-accent-soft)' : 'transparent' }}
               onClick={() => setCompacto((c) => !c)}
             >
               density_medium
-            </span>
-            <span
-              title="Exportar Lotes (CSV)"
-              style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '20px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer', padding: '6px' }}
+            </button>
+            <button
+              type="button"
+              title="Exportar lotes (CSV)"
+              aria-label="Exportar lotes (CSV)"
+              style={{ ...iconBtn, fontSize: '20px' }}
               onClick={exportarLotes}
             >
               download
-            </span>
+            </button>
           </div>
           <div style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
@@ -327,9 +339,6 @@ export default function LotesPage() {
                     </th>
                     <th style={{ width: '15%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap' }}>
                       CULTURA
-                    </th>
-                    <th style={{ width: '18%', textAlign: 'left', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap' }}>
-                      VARIEDADE
                     </th>
                     <th style={{ width: '84px', textAlign: 'right', padding: '0 16px', fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-2)', whiteSpace: 'nowrap' }}>
                       ÁREA
@@ -348,24 +357,27 @@ export default function LotesPage() {
                 <tbody>
                   {filtrados.length === 0 ? (
                     <tr>
-                      <td colSpan={8} style={{ padding: '32px 16px', textAlign: 'center', fontSize: '14px', color: 'var(--hp-text-2)' }}>
+                      <td colSpan={7} style={{ padding: '32px 16px', textAlign: 'center', fontSize: '14px', color: 'var(--hp-text-2)' }}>
                         Nenhum lote encontrado com os filtros aplicados.
                       </td>
                     </tr>
                   ) : (
                     filtrados.map((lote) => (
                       <tr key={lote.id} style={{ height: compacto ? '40px' : '52px', borderTop: '1px solid var(--hp-border)' }}>
-                        <td style={{ padding: '0 16px', fontSize: '14px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={lote.codigo} onClick={() => navigate(`/lotes/${lote.id}`)}>
-                          {lote.codigo}
+                        <td style={{ padding: '0 16px', fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={lote.codigo}>
+                          <a
+                            href={`/lotes/${lote.id}`}
+                            onClick={(e) => { e.preventDefault(); navigate(`/lotes/${lote.id}`); }}
+                            style={{ color: 'var(--hp-accent)' }}
+                          >
+                            {lote.codigo}
+                          </a>
                         </td>
                         <td style={{ padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {lote.propriedade}
                         </td>
                         <td style={{ padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={lote.cultura}>
                           {lote.cultura}
-                        </td>
-                        <td style={{ padding: '0 16px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {lote.variedade}
                         </td>
                         <td style={{ padding: '0 16px', fontSize: '14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                           {lote.area_ha} ha
@@ -374,18 +386,24 @@ export default function LotesPage() {
                           {formatDate(lote.data_plantio)}
                         </td>
                         <td style={{ padding: '0 16px' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: lote.status === 'em_manejo' ? 'var(--hp-atencao-bg)' : 'var(--hp-accent-soft)', color: lote.status === 'em_manejo' ? 'var(--hp-atencao)' : 'var(--hp-accent)', fontSize: '12px', fontWeight: '600' }}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: lote.status === 'em_manejo' ? 'var(--hp-atencao)' : 'var(--hp-accent)' }} />
-                            {statusLabel(lote.status)}
-                          </span>
+                          {(() => {
+                            const finalizado = (lote.status || '').toUpperCase() === 'FINALIZADO';
+                            const cor = finalizado ? 'var(--hp-text-2)' : 'var(--hp-accent)';
+                            return (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', height: '24px', padding: '0 10px', borderRadius: '12px', background: finalizado ? 'var(--hp-surface-2)' : 'var(--hp-accent-soft)', color: cor, fontSize: '12px', fontWeight: '600' }}>
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: cor }} />
+                                {statusLoteLabel(lote.status)}
+                              </span>
+                            );
+                          })()}
                         </td>
-                        <td style={{ padding: '0 16px', textAlign: 'right' }}>
-                          <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer', marginRight: '12px' }} onClick={() => openEdit(lote)}>
+                        <td style={{ padding: '0 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <button type="button" style={{ ...iconBtn, marginRight: '4px' }} onClick={() => openEdit(lote)} aria-label={`Editar ${lote.codigo}`} title="Editar">
                             edit
-                          </span>
-                          <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer' }} onClick={() => void excluir(lote)}>
+                          </button>
+                          <button type="button" style={iconBtn} onClick={() => void excluir(lote)} aria-label={`Excluir ${lote.codigo}`} title="Excluir">
                             delete
-                          </span>
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -394,69 +412,63 @@ export default function LotesPage() {
               </table>
             </div>
             <div style={{ height: '56px', borderTop: '1px solid var(--hp-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', fontSize: '12px', color: 'var(--hp-text-2)' }}>
+              {/* A paginação "10 por página" era só desenho (a lista mostra tudo); saiu para não enganar */}
               <span>
                 Mostrando {filtrados.length} de {lotes.length}
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ height: '32px', padding: '0 10px', display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid var(--hp-input-border)', borderRadius: '8px', fontSize: '12px', fontWeight: '600', color: 'var(--hp-text)' }}>
-                  10 por página
-                  <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '16px', lineHeight: '1', color: 'var(--hp-text-2)' }}>
-                    expand_more
-                  </span>
-                </div>
-                <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-icon-disabled)' }}>
-                  chevron_left
-                </span>
-                <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: 'var(--hp-icon-disabled)' }}>
-                  chevron_right
-                </span>
-              </div>
             </div>
           </div>
         </div>
         {Boolean(drawerOpen) && (
           <React.Fragment>
-            <div style={{ width: '480px', flex: '0 0 480px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', boxShadow: '-12px 0 48px rgba(22,21,15,.14)', display: 'flex', flexDirection: 'column', minHeight: '720px' }}>
+            <form onSubmit={(e) => void salvar(e)} aria-labelledby="lote-form-titulo" style={{ width: '480px', flex: '0 0 480px', background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', boxShadow: '-12px 0 48px rgba(22,21,15,.14)', display: 'flex', flexDirection: 'column', minHeight: '720px' }}>
               <div style={{ padding: '20px', borderBottom: '1px solid var(--hp-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '20px', lineHeight: '28px', fontWeight: '700' }}>
+                <h2 id="lote-form-titulo" style={{ margin: 0, fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '20px', lineHeight: '28px', fontWeight: '700' }}>
                   {editing ? 'Editar lote' : 'Novo lote'}
-                </div>
-                <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '20px', lineHeight: '1', color: 'var(--hp-text-2)', cursor: 'pointer' }} onClick={closeDrawer}>
+                </h2>
+                <button type="button" style={{ ...iconBtn, fontSize: '20px' }} onClick={closeDrawer} aria-label="Fechar formulário">
                   close
-                </span>
+                </button>
               </div>
               <div style={{ flex: '1', padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                {erro ? <div style={{ fontSize: '13px', color: 'var(--hp-critico)' }}>{erro}</div> : null}
+                {erro ? <div role="alert" style={{ fontSize: '13px', color: 'var(--hp-critico)' }}>{erro}</div> : null}
                 <div>
                   <div style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: 'var(--hp-text-3)', marginBottom: '12px' }}>
                     IDENTIFICAÇÃO
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                      <label htmlFor="lote-codigo" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
                         Código do lote
-                      </div>
-                      <input style={inputBox} placeholder="Ex.: Lote D4" value={form.codigo} onChange={onField('codigo')} />
+                      </label>
+                      <input id="lote-codigo" style={inputBox} placeholder="Ex.: Lote D4" value={form.codigo} onChange={onField('codigo')} />
                     </div>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                      <label htmlFor="lote-propriedade" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
                         Propriedade
-                      </div>
-                      <input style={inputBox} value={form.propriedade} onChange={onField('propriedade')} />
+                      </label>
+                      {/* Lista em vez de texto livre: antes um erro de digitação criava uma propriedade nova
+                          e, na edição, a troca de propriedade nem era gravada. */}
+                      <select id="lote-propriedade" style={inputBox} value={form.propriedade_id} onChange={onField('propriedade_id')}>
+                        <option value="">Escolha a propriedade</option>
+                        {propriedades.map((p) => (
+                          <option key={p.id} value={p.id}>{p.nome}</option>
+                        ))}
+                      </select>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
-                          Cultura
-                        </div>
-                        <input style={inputBox} value={form.cultura} onChange={onField('cultura')} />
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
-                          Variedade
-                        </div>
-                        <input style={inputBox} value={form.variedade} onChange={onField('variedade')} />
-                      </div>
+                    <div>
+                      <label htmlFor="lote-cultura" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                        Cultura
+                      </label>
+                      <select id="lote-cultura" style={inputBox} value={form.cultura} onChange={onField('cultura')}>
+                        <option value="">Sem cultura definida</option>
+                        {form.cultura && !culturas.some((c) => c.nome === form.cultura) ? (
+                          <option value={form.cultura}>{form.cultura}</option>
+                        ) : null}
+                        {culturas.map((c) => (
+                          <option key={c.id} value={c.nome}>{c.nome}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -468,46 +480,49 @@ export default function LotesPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                        <label htmlFor="lote-area" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
                           Área (ha)
-                        </div>
-                        <input style={inputBox} placeholder="0,0" value={form.area_ha} onChange={onField('area_ha')} />
+                        </label>
+                        <input id="lote-area" style={inputBox} inputMode="decimal" placeholder="0,0" value={form.area_ha} onChange={onField('area_ha')} />
                       </div>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                        <label htmlFor="lote-plantio" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
                           Data de plantio
-                        </div>
-                        <input type="date" style={inputBox} value={form.data_plantio} onChange={onField('data_plantio')} />
+                        </label>
+                        <input id="lote-plantio" type="date" style={inputBox} value={form.data_plantio} onChange={onField('data_plantio')} />
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                      <label htmlFor="lote-sensor" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
                         Sensor vinculado
+                      </label>
+                      <input id="lote-sensor" style={inputBox} placeholder="Ex.: 24:6F:28:AB:CD:01" value={form.sensor_vinculado} onChange={onField('sensor_vinculado')} />
+                      <div style={{ fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '6px' }}>
+                        Código do ESP32. Para tirar ou trocar um sensor de lote, use Cadastros › Sensores.
                       </div>
-                      <input style={inputBox} placeholder="IOT-001" value={form.sensor_vinculado} onChange={onField('sensor_vinculado')} />
                     </div>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                      <label htmlFor="lote-status" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
                         Status
-                      </div>
-                      <select style={inputBox} value={form.status} onChange={onField('status')}>
-                        <option value="ativo">ativo</option>
-                        <option value="em_manejo">em manejo</option>
-                        <option value="inativo">inativo</option>
+                      </label>
+                      <select id="lote-status" style={inputBox} value={form.status} onChange={onField('status')}>
+                        {Object.entries(STATUS_LOTE).map(([valor, rotulo]) => (
+                          <option key={valor} value={valor}>{rotulo}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
                 </div>
               </div>
               <div style={{ padding: '16px 20px', borderTop: '1px solid var(--hp-border)', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                <div style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', border: '1px solid var(--hp-input-border)', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }} onClick={closeDrawer}>
+                <button type="button" style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', border: '1px solid var(--hp-input-border)', background: 'transparent', color: 'var(--hp-text)', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }} onClick={closeDrawer}>
                   Cancelar
-                </div>
-                <div style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }} onClick={() => void salvar()}>
-                  Salvar lote
-                </div>
+                </button>
+                <button type="submit" disabled={salvando} style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', background: 'var(--hp-accent)', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: '600', cursor: salvando ? 'progress' : 'pointer', opacity: salvando ? 0.7 : 1 }}>
+                  {salvando ? 'Salvando...' : 'Salvar lote'}
+                </button>
               </div>
-            </div>
+            </form>
           </React.Fragment>
         )}
       </div>

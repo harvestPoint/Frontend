@@ -15,6 +15,7 @@ import {
   type Leitura,
 } from '@/lib/api';
 import ClimaComparativo from '@/components/ClimaComparativo';
+import AutomacaoDashboardCard from '@/components/automacao/AutomacaoDashboardCard';
 
 interface ChipItem {
   id: string;
@@ -457,43 +458,48 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Lista Lateral de Alertas Ativos */}
-        <div style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', lineHeight: '22px', fontWeight: '600' }}>
-              Alertas ativos ({alertas.length})
+        {/* Coluna lateral: alertas ativos + card de Automação */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Lista Lateral de Alertas Ativos */}
+          <div style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-border)', borderRadius: '16px', padding: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '16px', lineHeight: '22px', fontWeight: '600' }}>
+                Alertas ativos ({alertas.length})
+              </div>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer' }} onClick={() => navigate('/alertas')}>
+                Ver todos ›
+              </div>
             </div>
-            <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--hp-accent)', cursor: 'pointer' }} onClick={() => navigate('/alertas')}>
-              Ver todos ›
+  
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '14px' }}>
+              {alertas.length === 0 ? (
+                <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--hp-text-2)', fontSize: '13px' }}>
+                  ✓ Nenhum alerta pendente no momento.
+                </div>
+              ) : (
+                alertas.slice(0, 3).map((al) => {
+                  const isCritico = (al.tipo || '').toLowerCase().includes('critico') || (al.tipo || '').toLowerCase().includes('alta');
+                  return (
+                    <div key={al.id} style={{ border: '1px solid var(--hp-border)', borderLeft: `3px solid ${isCritico ? 'var(--hp-critico)' : 'var(--hp-atencao)'}`, borderRadius: '12px', padding: '14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: isCritico ? 'var(--hp-critico)' : 'var(--hp-atencao)' }}>
+                          {al.tipo}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '13px', fontWeight: '600', marginTop: '6px', color: 'var(--hp-text)' }}>
+                        {al.mensagem}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px' }}>
+                        Sensor: {al.sensor_codigo || al.sensor_id} · {al.lote_nome || ''}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '14px' }}>
-            {alertas.length === 0 ? (
-              <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--hp-text-2)', fontSize: '13px' }}>
-                ✓ Nenhum alerta pendente no momento.
-              </div>
-            ) : (
-              alertas.slice(0, 3).map((al) => {
-                const isCritico = (al.tipo || '').toLowerCase().includes('critico') || (al.tipo || '').toLowerCase().includes('alta');
-                return (
-                  <div key={al.id} style={{ border: '1px solid var(--hp-border)', borderLeft: `3px solid ${isCritico ? 'var(--hp-critico)' : 'var(--hp-atencao)'}`, borderRadius: '12px', padding: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '.08em', color: isCritico ? 'var(--hp-critico)' : 'var(--hp-atencao)' }}>
-                        {al.tipo}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '13px', fontWeight: '600', marginTop: '6px', color: 'var(--hp-text)' }}>
-                      {al.mensagem}
-                    </div>
-                    <div style={{ fontSize: '12px', color: 'var(--hp-text-2)', marginTop: '4px' }}>
-                      Sensor: {al.sensor_codigo || al.sensor_id} · {al.lote_nome || ''}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+          <AutomacaoDashboardCard />
         </div>
       </div>
 

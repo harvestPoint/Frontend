@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { listSensores, createSensor, deleteSensor, listLotes, createLeitura, type Sensor, type Lote } from '@/lib/api';
+import { listSensores, createSensor, updateSensor, deleteSensor, listLotes, createLeitura, readApiError, type Sensor, type Lote } from '@/lib/api';
 
 export default function SensoresPage() {
   const [sensores, setSensores] = useState<Sensor[]>([]);
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [loading, setLoading] = useState(true);
+  // A tela inteira só vira "Carregando..." na primeira vez; recargas depois
+  // (ex.: após simular uma leitura) atualizam a lista sem apagar a página.
+  const [jaCarregou, setJaCarregou] = useState(false);
+  const [editando, setEditando] = useState<Sensor | null>(null);
+  const [formErro, setFormErro] = useState('');
   const [error, setError] = useState('');
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
@@ -33,10 +38,10 @@ export default function SensoresPage() {
         setLoteIdInput(lotesData[0].id);
       }
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e?.message || 'Falha ao carregar sensores.');
+      setError(readApiError(err).message || 'Falha ao carregar sensores.');
     } finally {
       setLoading(false);
+      setJaCarregou(true);
     }
   }
 
@@ -44,42 +49,64 @@ export default function SensoresPage() {
     loadData();
   }, []);
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!codigoInput.trim()) {
-      alert('Informe o código ou MAC do sensor.');
-      return;
-    }
-    if (!loteIdInput) {
-      alert('Selecione um lote para vincular o sensor.');
-      return;
-    }
+  function abrirNovo() {
+    setEditando(null);
+    setFormErro('');
+    setCodigoInput('');
+    setStatusInput('ATIVO');
+    if (lotes.length > 0 && loteIdInput === '') setLoteIdInput(lotes[0].id);
+    setShowForm(true);
+  }
 
+  function abrirEdicao(s: Sensor) {
+    setEditando(s);
+    setFormErro('');
+    setCodigoInput(s.codigo);
+    setLoteIdInput(s.lote_id);
+    setStatusInput((s.status || 'ATIVO').toUpperCase());
+    setShowForm(true);
+  }
+
+  function fecharForm() {
+    setShowForm(false);
+    setEditando(null);
+    setFormErro('');
+  }
+
+  async function handleSalvar(e: React.FormEvent) {
+    e.preventDefault();
+    if (saving) return;
+    if (!codigoInput.trim()) return setFormErro('Informe o código ou MAC do sensor.');
+    if (!loteIdInput) return setFormErro('Selecione um lote para vincular o sensor.');
+
+    const dados = { codigo: codigoInput.trim().toUpperCase(), lote_id: Number(loteIdInput), status: statusInput };
     try {
       setSaving(true);
-      const novo = await createSensor({
-        codigo: codigoInput.trim().toUpperCase(),
-        lote_id: Number(loteIdInput),
-        status: statusInput,
-      });
-      setSensores((prev) => [novo, ...prev]);
-      setCodigoInput('');
-      setShowForm(false);
+      setFormErro('');
+      if (editando) {
+        const salvo = await updateSensor(editando.id, dados);
+        setSensores((prev) => prev.map((s) => (s.id === salvo.id ? salvo : s)));
+      } else {
+        const novo = await createSensor(dados);
+        setSensores((prev) => [novo, ...prev]);
+      }
+      fecharForm();
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } };
-      alert(e?.response?.data?.message || 'Erro ao cadastrar sensor.');
+      const apiErr = readApiError(err);
+      setFormErro(apiErr.details?.join(' · ') || apiErr.message || 'Erro ao salvar sensor.');
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(id: number) {
-    if (!window.confirm('Deseja realmente remover este sensor?')) return;
+  async function handleDelete(s: Sensor) {
+    if (!window.confirm(`Remover o sensor ${s.codigo}? As leituras e alertas dele também serão apagados.`)) return;
     try {
-      await deleteSensor(id);
-      setSensores((prev) => prev.filter((s) => s.id !== id));
-    } catch {
-      alert('Erro ao excluir sensor.');
+      setError('');
+      await deleteSensor(s.id);
+      setSensores((prev) => prev.filter((x) => x.id !== s.id));
+    } catch (err: unknown) {
+      setError(readApiError(err).message || 'Erro ao excluir sensor.');
     }
   }
 
@@ -97,8 +124,8 @@ export default function SensoresPage() {
       });
       setTesteMsg(`✓ Telemetria registrada: Sensor ${res.sensor_codigo || cod} -> ${tempRand} °C, ${umidRand} %`);
       await loadData();
-    } catch {
-      setTesteMsg('Falha ao enviar telemetria.');
+    } catch (err) {
+      setTesteMsg(`Falha ao enviar telemetria: ${readApiError(err).message}`);
     } finally {
       setTestandoEsp32(false);
     }
@@ -111,7 +138,7 @@ export default function SensoresPage() {
     return matchBusca && matchStatus;
   });
 
-  if (loading) {
+  if (loading && !jaCarregou) {
     return <div style={{ padding: '24px', fontSize: '14px', color: 'var(--hp-text-2)' }}>Carregando sensores...</div>;
   }
 
@@ -139,7 +166,7 @@ export default function SensoresPage() {
           </button>
           <button
             type="button"
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => (showForm ? fecharForm() : abrirNovo())}
             style={{ height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--hp-accent)', color: '#FFFFFF', borderRadius: '12px', fontSize: '13px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
           >
             <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>
@@ -202,8 +229,13 @@ export default function SensoresPage() {
       )}
 
       {showForm && (
-        <form onSubmit={handleCreate} style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-accent)', borderRadius: '16px', padding: '20px', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--hp-text)' }}>Cadastrar Novo Sensor ESP-32</div>
+        <form onSubmit={handleSalvar} noValidate style={{ background: 'var(--hp-surface)', border: '1px solid var(--hp-accent)', borderRadius: '16px', padding: '20px', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--hp-text)' }}>
+            {editando ? `Editar sensor · ${editando.codigo}` : 'Cadastrar Novo Sensor ESP-32'}
+          </div>
+          {formErro ? (
+            <div role="alert" style={{ fontSize: '13px', color: 'var(--hp-critico)', background: 'var(--hp-critico-bg)', borderRadius: '10px', padding: '10px 12px' }}>{formErro}</div>
+          ) : null}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: 'var(--hp-text-2)' }}>
@@ -237,7 +269,7 @@ export default function SensoresPage() {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: 'var(--hp-text-2)' }}>
-                Status Inicial
+                {editando ? 'Status' : 'Status Inicial'}
               </label>
               <select
                 value={statusInput}
@@ -253,7 +285,7 @@ export default function SensoresPage() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={fecharForm}
               style={{ height: '36px', padding: '0 14px', borderRadius: '10px', border: '1px solid var(--hp-input-border)', background: 'transparent', color: 'var(--hp-text-2)', fontSize: '13px', cursor: 'pointer' }}
             >
               Cancelar
@@ -263,7 +295,7 @@ export default function SensoresPage() {
               disabled={saving}
               style={{ height: '36px', padding: '0 18px', borderRadius: '10px', border: 'none', background: 'var(--hp-accent)', color: '#fff', fontWeight: '600', fontSize: '13px', cursor: 'pointer' }}
             >
-              {saving ? 'Salvando...' : 'Salvar Sensor'}
+              {saving ? 'Salvando...' : editando ? 'Salvar alterações' : 'Salvar Sensor'}
             </button>
           </div>
         </form>
@@ -365,8 +397,20 @@ export default function SensoresPage() {
                     <td style={{ padding: '0 16px', textAlign: 'right' }}>
                       <button
                         type="button"
-                        onClick={() => handleDelete(s.id)}
+                        onClick={() => abrirEdicao(s)}
+                        title="Editar sensor"
+                        aria-label={`Editar ${s.codigo}`}
+                        style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--hp-text-2)', padding: '6px' }}
+                      >
+                        <span aria-hidden="true" style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>
+                          edit
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(s)}
                         title="Excluir sensor"
+                        aria-label={`Excluir ${s.codigo}`}
                         style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--hp-critico)', padding: '6px' }}
                       >
                         <span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1' }}>

@@ -4,6 +4,13 @@
 // por algo idiomático em React.
 import { useState, type CSSProperties } from 'react';
 
+/** Formata um número com vírgula decimal (padrão BR) em vez do ponto do
+ * JS — regra do redesign 1b: "todo número leva unidade e vírgula decimal".
+ * `casas` é o número de casas decimais (1 por padrão, para temperatura/%). */
+export function fmtNum(n: number, casas = 1): string {
+  return n.toFixed(casas).replace('.', ',');
+}
+
 /** Estilo do cartão de perfil (Proprietário/Técnico) do Login e do Cadastro.
  * Cor sempre fixa em claro — essas duas telas nunca acompanham o modo
  * noturno do resto do app, então usa hex direto, nunca var(--hp-*). */

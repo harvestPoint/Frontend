@@ -346,7 +346,7 @@ export default function LandingPage() {
   );
 
   return (
-    <div className="lp">
+    <div className="lp hp-page-in">
       <style>{LANDING_CSS}</style>
       <div>
         {/* Topbar */}

@@ -61,7 +61,7 @@ export default function LogisticaPage() {
               <div style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '18px', fontWeight: 700 }}>{p.produto}</div>
               {p.total_kg != null ? (
                 <div style={{ fontSize: '12px', color: 'var(--hp-text-2)' }}>
-                  {(p.total_kg / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} t em 24 meses
+                  {(p.total_kg / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} t nos últimos 12 meses
                 </div>
               ) : null}
             </div>
