@@ -19,15 +19,31 @@ export default function SignupPage() {
   const roleCheckTecnico = role === 'tecnico' ? 1 : 0;
   const roleIconColorProprietario = role === 'proprietario' ? '#6B8F71' : '#8B8D82';
   const roleIconColorTecnico = role === 'tecnico' ? '#6B8F71' : '#8B8D82';
-  const [cad, setCad] = useState({ nome: '', email: '', senha: '', propriedade: '' });
+  
+  // Adicionados cpf_cnpj e telefone no estado inicial
+  const [cad, setCad] = useState({ 
+    nome: '', 
+    email: '', 
+    senha: '', 
+    propriedade: '', 
+    cpf_cnpj: '', 
+    telefone: '' 
+  });
+
   const onNomeChange = (e: React.ChangeEvent<HTMLInputElement>) => setCad((c) => ({ ...c, nome: e.target.value }));
   const onCadEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => setCad((c) => ({ ...c, email: e.target.value }));
   const onCadSenhaChange = (e: React.ChangeEvent<HTMLInputElement>) => setCad((c) => ({ ...c, senha: e.target.value }));
   const onCadPropriedadeChange = (e: React.ChangeEvent<HTMLInputElement>) => setCad((c) => ({ ...c, propriedade: e.target.value }));
+  
+  // Funções para manipular CPF/CNPJ e Telefone
+  const onCadCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => setCad((c) => ({ ...c, cpf_cnpj: e.target.value }));
+  const onCadTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => setCad((c) => ({ ...c, telefone: e.target.value }));
+
   const goLogin = () => navigate('/login');
   const { login } = useAuth();
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
+
   const goDashboard = async () => {
     setErro('');
     setEnviando(true);
@@ -38,6 +54,8 @@ export default function SignupPage() {
         senha: cad.senha,
         role,
         propriedade: cad.propriedade,
+        cpf_cnpj: cad.cpf_cnpj, // Enviando o dado real preenchido pelo usuário
+        telefone: cad.telefone, // Enviando o dado real preenchido pelo usuário
       });
       login(user);
       navigate('/dashboard');
@@ -102,12 +120,16 @@ export default function SignupPage() {
             <div style={{fontSize: '12px', lineHeight: '16px', color: '#6B6D63', textAlign: 'center', marginTop: '4px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '110ms'}}>
               Acompanhe clima, lotes e operações do Vale.
             </div>
+            
+            {/* Nome completo */}
             <div style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600', color: '#1F211D', margin: '22px 0 6px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '150ms'}}>
               Nome completo
             </div>
             <div style={{height: '48px', borderRadius: '12px', background: '#FFFFFF', border: '1px solid #D6D4CB', display: 'flex', alignItems: 'center', padding: '0 14px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '150ms'}}>
               <input type="text" placeholder="Seu nome" value={cad.nome} onChange={onNomeChange} style={{width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: '#1F211D'}} />
             </div>
+
+            {/* E-mail profissional */}
             <div style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600', color: '#1F211D', margin: '14px 0 6px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '190ms'}}>
               E-mail profissional
             </div>
@@ -117,6 +139,8 @@ export default function SignupPage() {
               </span>
               <input type="email" placeholder="seu@email.com" value={cad.email} onChange={onCadEmailChange} style={{flex: '1', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: '#1F211D'}} />
             </div>
+
+            {/* Senha */}
             <div style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600', color: '#1F211D', margin: '14px 0 6px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '230ms'}}>
               Senha
             </div>
@@ -126,6 +150,29 @@ export default function SignupPage() {
               </span>
               <input type="password" placeholder="••••••••" value={cad.senha} onChange={onCadSenhaChange} style={{flex: '1', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', letterSpacing: '.04em', color: '#1F211D'}} />
             </div>
+
+            {/* CPF / CNPJ (Novo campo incluído) */}
+            <div style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600', color: '#1F211D', margin: '14px 0 6px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '250ms'}}>
+              CPF ou CNPJ
+            </div>
+            <div style={{height: '48px', borderRadius: '12px', background: '#FFFFFF', border: '1px solid #D6D4CB', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 14px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '250ms'}}>
+              <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: '#8B8D82'}}>
+                badge
+              </span>
+              <input type="text" placeholder="000.000.000-00" value={cad.cpf_cnpj} onChange={onCadCpfCnpjChange} style={{flex: '1', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: '#1F211D'}} />
+            </div>
+
+            {/* Telefone (Novo campo incluído) */}
+            <div style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600', color: '#1F211D', margin: '14px 0 6px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '260ms'}}>
+              Telefone
+            </div>
+            <div style={{height: '48px', borderRadius: '12px', background: '#FFFFFF', border: '1px solid #D6D4CB', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 14px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '260ms'}}>
+              <span style={{fontFamily: "'Material Symbols Outlined'", fontSize: '18px', lineHeight: '1', color: '#8B8D82'}}>
+                call
+              </span>
+              <input type="text" placeholder="(87) 99999-9999" value={cad.telefone} onChange={onCadTelefoneChange} style={{flex: '1', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: '#1F211D'}} />
+            </div>
+
             <div style={{fontSize: '11px', lineHeight: '14px', fontWeight: '700', letterSpacing: '.08em', color: '#8B8D82', margin: '22px 0 10px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '270ms'}}>
               QUAL SUA FUNÇÃO NA FAZENDA
             </div>
@@ -167,17 +214,21 @@ export default function SignupPage() {
                 )}
               </div>
             </div>
+
+            {/* Nome da propriedade */}
             <div style={{fontSize: '13px', lineHeight: '16px', fontWeight: '600', color: '#1F211D', margin: '16px 0 6px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '310ms'}}>
               Nome da propriedade
             </div>
             <div style={{height: '48px', borderRadius: '12px', background: '#FFFFFF', border: '1px solid #D6D4CB', display: 'flex', alignItems: 'center', padding: '0 14px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '310ms'}}>
               <input type="text" placeholder="Ex.: Fazenda Boa Vista" value={cad.propriedade} onChange={onCadPropriedadeChange} style={{width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: '#1F211D'}} />
             </div>
+
             {erro ? (
               <div style={{fontSize: '12px', color: '#B42318', marginTop: '12px'}}>
                 {erro}
               </div>
             ) : null}
+
             <div style={{height: '52px', marginTop: '20px', borderRadius: '12px', background: '#6B8F71', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '15px', fontWeight: '600', cursor: enviando ? 'default' : 'pointer', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '350ms'}} onClick={enviando ? undefined : goDashboard}>
               {enviando ? 'Criando conta...' : 'Criar conta'}
             </div>
@@ -188,6 +239,7 @@ export default function SignupPage() {
               </span>
             </div>
           </div>
+          
           <div style={{maxWidth: '480px', alignSelf: 'center', textAlign: 'right', width: '485px', height: '146px'}}>
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', marginBottom: '20px', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '40ms'}}>
               <div style={{fontSize: '11px', lineHeight: '14px', fontWeight: '700', letterSpacing: '.08em', color: 'rgba(255,255,255,.7)'}}>
@@ -196,11 +248,10 @@ export default function SignupPage() {
               <div style={{width: '3px', height: '16px', borderRadius: '2px', background: '#B9D0BC'}} />
             </div>
             <h1 style={{margin: '0', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: '36px', lineHeight: '42px', fontWeight: '800', letterSpacing: '-.02em', color: '#FFFFFF', textWrap: 'pretty', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '90ms'}}>
-              Bem-vindo ao Vale — leva menos de 
+              Bem-vindo ao Vale — leva menos de<span> </span>
               <span style={{color: '#B9D0BC', borderBottom: '3px solid #B9D0BC', borderRadius: '3px', paddingBottom: '3px'}}>
-                dois minutos
+                2 minutos
               </span>
-              .
             </h1>
             <p style={{margin: '18px 0 0', fontSize: '15px', lineHeight: '23px', color: 'rgba(255,255,255,.85)', maxWidth: '420px', marginLeft: 'auto', opacity: '0', animation: 'hpFieldIn 400ms ease-out forwards', animationDelay: '140ms'}}>
               Cadastre sua fazenda e comece a acompanhar clima, lotes e operações em tempo real.
